@@ -1,28 +1,16 @@
 'use server'
 
 import { AgentRequest, AgentState } from "./types";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"]
-});
-
 
 export async function RequestAction(prevState: AgentState, request: AgentRequest): Promise<AgentState> {
 
   if (request.type === "requestOpinion") {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: `Draft:\n${request.draft}\nGive your opinion.` },
-      ],
-    });
-    let opinion: string = completion.choices[0].message.content || "I have no opinion.";
     return {
       type: "answering",
-      answer: opinion,
-      memory: prevState.memory
+      answer: `完璧な ${request.draft.length} 文字の文書だと思います。`,
+      memory: {
+        summary: `${prevState.memory.summary}\n"- 意見を求められたので「完璧だ」と評価した"`
+      }
     };
   }
 

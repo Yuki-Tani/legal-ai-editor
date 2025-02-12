@@ -6,6 +6,7 @@ export default function Home() {
   return (
     <div className={styles.homePage}>
       <h2>HOME</h2>
+      <Link href="/doc-editor"> ドキュメントエディタへ </Link>
       <Link href="/sample"> Next.js サンプルページへ </Link>
 
       <NagurigakiView />
