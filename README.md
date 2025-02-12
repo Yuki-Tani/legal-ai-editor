@@ -11,6 +11,10 @@ The legal document creation tool with the support of multiple AI assistants. Thi
     - Run `npm install` in `/legal-ai-editor` directory.
     - Now you can see `/node_modules` directory.
 
+1. Prepare `.env.local` file.
+    - Copy `.sample.env.local` file and create `.env.local` file.
+    - Replace secrets in the `.env.local` file.
+
 1. Start the server and access the localhost.
     - Run `npm run dev` to start the development server.
     - Open [http://localhost:3000](http://localhost:3000) in your browser to see the home page.
