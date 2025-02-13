@@ -4,9 +4,9 @@ import { startTransition, useActionState, useState, useTransition } from "react"
 import { v4 as uuidv4 } from "uuid";
 import Editor from "./components/Editor";
 import CommentSidebar from "./components/CommentSidebar";
-import { SelectionRange } from "./types";
 import { RequestAction as ReqeustActionToBaseAI } from "../api/_agent/BaseAI";
 import { initalAgentState } from "../api/_agent/types";
+import { SelectionRange, CommentData } from "./types";
 
 export default function DocEditorPage() {
   const [coreIdea, setCoreIdea] = useState("");
@@ -33,36 +33,39 @@ export default function DocEditorPage() {
     setDraft(content);
   };
 
+  // 選択時に新規スレッド生成
   const handleTextSelect = (
     selectedText: string,
     startOffset: number,
     endOffset: number
   ) => {
     if (startOffset === -1) return;
+
     const newSelection: SelectionRange = {
       id: uuidv4(),
       text: selectedText,
       startOffset,
       endOffset,
       comments: [],
+      replacement: "",
+      isAccepted: false,
     };
     setSelections((prev) => [...prev, newSelection]);
   };
 
+  // コメント追加
   const handleAddComment = (selectionId: string, content: string) => {
     setSelections((prev) =>
       prev.map((sel) => {
         if (sel.id === selectionId) {
+          const newComment: CommentData = {
+            id: uuidv4(),
+            author: "User",
+            content,
+          };
           return {
             ...sel,
-            comments: [
-              ...sel.comments,
-              {
-                id: uuidv4(),
-                author: "User",
-                content,
-              },
-            ],
+            comments: [...sel.comments, newComment],
           };
         }
         return sel;
@@ -70,24 +73,79 @@ export default function DocEditorPage() {
     );
   };
 
-  const handleReplaceSelection = (selectionId: string, replacement: string) => {
+  // Replacementの編集
+  const handleUpdateThreadReplacement = (
+    selectionId: string,
+    newReplacement: string
+  ) => {
+    setSelections((prev) =>
+      prev.map((sel) =>
+        sel.id === selectionId
+          ? { ...sel, replacement: newReplacement }
+          : sel
+      )
+    );
+  };
+
+  // Accept: テキスト置換＆スレッドを無効化
+  const handleReplaceSelection = (selectionId: string) => {
     const targetSelection = selections.find((sel) => sel.id === selectionId);
     if (!targetSelection) return;
 
+    // テキストを置換
     const before = draft.slice(0, targetSelection.startOffset);
     const after = draft.slice(targetSelection.endOffset);
-    const newDraft = before + replacement + after;
+    const newDraft = before + targetSelection.replacement + after;
     setDraft(newDraft);
+
+    // isAccepted = true で無効化
+    setSelections((prev) =>
+      prev.map((sel) =>
+        sel.id === selectionId
+          ? { ...sel, isAccepted: true }
+          : sel
+      )
+    );
+  };
+
+  // Decline: replacementを空に
+  const handleDeclineSelection = (selectionId: string) => {
+    setSelections((prev) =>
+      prev.map((sel) =>
+        sel.id === selectionId
+          ? { ...sel, replacement: "" }
+          : sel
+      )
+    );
+  };
+
+  // コメント削除
+  const handleDeleteComment = (selectionId: string, commentId: string) => {
+    setSelections((prev) =>
+      prev.map((sel) => {
+        if (sel.id === selectionId) {
+          return {
+            ...sel,
+            comments: sel.comments.filter((c) => c.id !== commentId),
+          };
+        }
+        return sel;
+      })
+    );
+  };
+
+  // スレッド削除
+  const handleDeleteThread = (selectionId: string) => {
     setSelections((prev) => prev.filter((sel) => sel.id !== selectionId));
   };
 
+  // サイドバー開閉
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
-      {/* メインコンテンツ：サイドバー分の余白を右側に確保 */}
       <div
         style={{
           flex: 1,
@@ -96,7 +154,8 @@ export default function DocEditorPage() {
           transition: "margin-right 0.3s",
         }}
       >
-        <div style={{ marginBottom: "16px" }}>
+        {/* コアアイデア・要件 */}
+        <div style={{ position: "relative", marginBottom: "100px", zIndex: 10 }}>
           <label>コアアイデア・要件:</label>
           <textarea
             rows={3}
@@ -104,16 +163,20 @@ export default function DocEditorPage() {
             value={coreIdea}
             onChange={(e) => setCoreIdea(e.target.value)}
           />
-          <button onClick={handleStartDiscussion} style={{ marginTop: "8px" }}>
+          {/* ディスカッション開始 */}
+          <button style={{ marginTop: "8px", float: "right" }} onClick={handleStartDiscussion}>
             ディスカッションを開始
           </button>
         </div>
 
-        <Editor
-          content={draft}
-          onContentChange={handleContentChange}
-          onTextSelect={handleTextSelect}
-        />
+        {/* Editor */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <Editor
+            content={draft}
+            onContentChange={handleContentChange}
+            onTextSelect={handleTextSelect}
+          />
+        </div>
       </div>
 
       {/* コメントサイドバー */}
@@ -123,6 +186,10 @@ export default function DocEditorPage() {
         selections={selections}
         onAddComment={handleAddComment}
         onReplaceSelection={handleReplaceSelection}
+        onDeclineSelection={handleDeclineSelection}
+        onDeleteComment={handleDeleteComment}
+        onDeleteThread={handleDeleteThread}
+        onUpdateThreadReplacement={handleUpdateThreadReplacement}
       />
     </div>
   );
