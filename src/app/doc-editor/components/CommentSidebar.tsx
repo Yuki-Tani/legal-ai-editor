@@ -32,6 +32,7 @@ const CommentSidebar: React.FC<CommentSidebarProps> = ({
         padding: "8px",
         boxSizing: "border-box",
         transition: "width 0.3s",
+        overflowY: "auto",
       }}
     >
       {/* トグルボタンを右上に配置 */}
@@ -47,7 +48,7 @@ const CommentSidebar: React.FC<CommentSidebarProps> = ({
         {isOpen ? "サイドバーを閉じる" : "サイドバーを開く"}
       </button>
 
-      {/* サイドバーが開いている場合のみ内容を表示 */}
+      {/* サイドバーが開いてたら内容を表示 */}
       {isOpen && (
         <div style={{ marginTop: "40px" }}>
           <h3>コメントスレッド</h3>

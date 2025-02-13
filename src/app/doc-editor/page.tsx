@@ -17,6 +17,7 @@ export default function DocEditorPage() {
 
   const handleStartDiscussion = async () => {
     try {
+        console.log("Requesting BaseAI to start discussion...");
         const newState = await ReqeustActionToBaseAI(baseAIState, {
             type: "requestDraft",
             coreIdea,
@@ -96,7 +97,7 @@ export default function DocEditorPage() {
           transition: "margin-right 0.3s",
         }}
       >
-        <div style={{ marginBottom: "16px" }}>
+        <div style={{ position: "relative", zIndex: 10}}>
           <label>コアアイデア・要件:</label>
           <textarea
             rows={3}
@@ -104,16 +105,18 @@ export default function DocEditorPage() {
             value={coreIdea}
             onChange={(e) => setCoreIdea(e.target.value)}
           />
-          <button onClick={handleStartDiscussion} style={{ marginTop: "8px" }}>
+          {/* ディスカッション開始ボタン、右寄せ */}
+          <button onClick={handleStartDiscussion} style={{ marginTop: "8px", marginBottom: "70px", float: "right" }}>
             ディスカッションを開始
           </button>
         </div>
-
-        <Editor
-          content={draft}
-          onContentChange={handleContentChange}
-          onTextSelect={handleTextSelect}
-        />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <Editor
+            content={draft}
+            onContentChange={handleContentChange}
+            onTextSelect={handleTextSelect}
+          />
+        </div>
       </div>
 
       {/* コメントサイドバー */}

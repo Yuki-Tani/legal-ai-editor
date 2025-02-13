@@ -7,6 +7,7 @@ export default function Home() {
     <div className={styles.homePage}>
       <h2>HOME</h2>
       <Link href="/doc-editor"> ドキュメントエディタへ </Link>
+      <br />
       <Link href="/sample"> Next.js サンプルページへ </Link>
 
       <NagurigakiView />
