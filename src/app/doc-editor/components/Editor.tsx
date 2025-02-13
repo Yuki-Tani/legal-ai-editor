@@ -73,8 +73,6 @@ const Editor: React.FC<EditorProps> = ({
     const selectedText = highlightSpan.innerText;
     setTempHighlight({ span: highlightSpan, x, y, selectedText });
 
-    selection.removeAllRanges();
-
     if (editorRef.current) {
       onContentChange(editorRef.current.innerText);
     }
