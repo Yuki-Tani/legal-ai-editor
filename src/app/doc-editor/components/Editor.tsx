@@ -24,58 +24,62 @@ const Editor: React.FC<EditorProps> = ({
   const popupRef = useRef<HTMLDivElement>(null);
 
   const [tempHighlight, setTempHighlight] = useState<TempHighlight | null>(null);
-  const [originalHTML, setOriginalHTML] = useState<string>("");
+  const [originalText, setOriginalText] = useState<string>("");
+  const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number } | null>(null);
 
-  // マウスアップ時：選択範囲を黄色でハイライトし、ポップアップを表示
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!editorRef.current) return;
+    const editorRect = editorRef.current.getBoundingClientRect();
+    setMouseDownPos({
+      x: e.clientX - editorRect.left,
+      y: e.clientY - editorRect.top,
+    });
+  };
+
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
     const range = selection.getRangeAt(0);
-    if (range.collapsed) return; // 選択がない場合は何もしない
+    if (range.collapsed) return;
 
-    // キャンセル用に現在のHTMLを保存
     if (editorRef.current) {
-      setOriginalHTML(editorRef.current.innerHTML);
+      setOriginalText(editorRef.current.innerText);
     }
 
-    // 選択範囲を抜き出し、黄色の <span> でラップ
-    const extractedContents = range.extractContents();
+    const extracted = range.extractContents();
     const highlightSpan = document.createElement("span");
     highlightSpan.style.backgroundColor = "yellow";
-    highlightSpan.appendChild(extractedContents);
+    highlightSpan.appendChild(extracted);
     range.insertNode(highlightSpan);
 
-    // Editor 内での相対座標を計算（X: 最大幅制限あり、Y: 下に20px分シフト）
     const editorRect = editorRef.current?.getBoundingClientRect();
     if (!editorRect) return;
+
     let x = e.clientX - editorRect.left;
     let y = e.clientY - editorRect.top;
+    if (mouseDownPos) {
+      x = Math.max(mouseDownPos.x, x) + 10;
+      y = Math.max(mouseDownPos.y, y);
+    }
+
     if (y < 0) y = 0;
     const editorWidth = editorRect.width;
-    const limitX = editorWidth - 200; // 例: ポップアップ幅 200px分余裕を持たせる
+    const limitX = editorWidth - 200;
     if (x > limitX) {
       x = limitX;
+      y = -60;
     }
 
     const selectedText = highlightSpan.innerText;
+    setTempHighlight({ span: highlightSpan, x, y, selectedText });
 
-    setTempHighlight({
-      span: highlightSpan,
-      x,
-      y,
-      selectedText,
-    });
-
-    // 標準の青色選択ハイライトを解除
     selection.removeAllRanges();
 
-    // 更新後のHTMLを親に反映
     if (editorRef.current) {
-      onContentChange(editorRef.current.innerHTML);
+      onContentChange(editorRef.current.innerText);
     }
   };
 
-  // 「はい」ボタン：黄色ハイライト状態を確定し、コメント作成情報を親に通知
   const handleConfirm = () => {
     if (!tempHighlight || !editorRef.current) return;
 
@@ -85,25 +89,22 @@ const Editor: React.FC<EditorProps> = ({
     const endOffset = startOffset + selectedText.length;
 
     onTextSelect(selectedText, startOffset, endOffset);
-
-    onContentChange(editorRef.current.innerHTML);
-
+    onContentChange(editorRef.current.innerText);
     setTempHighlight(null);
   };
 
-  // 「いいえ」ボタン、またはポップアップ外クリック時：ハイライト前の状態に戻す
   const handleCancel = () => {
     if (!tempHighlight || !editorRef.current) return;
 
-    onContentChange(originalHTML);
+    editorRef.current.innerText = originalText;
+    onContentChange(originalText);
     setTempHighlight(null);
   };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    onContentChange((e.target as HTMLDivElement).innerHTML);
+    onContentChange((e.target as HTMLDivElement).innerText);
   };
 
-  // ポップアップ外をクリックした場合、handleCancel() を呼び出す処理
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
@@ -127,8 +128,9 @@ const Editor: React.FC<EditorProps> = ({
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        onInput={handleInput}
+        onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
+        onInput={handleInput}
         style={{
           width: "100%",
           padding: "16px",
@@ -138,10 +140,11 @@ const Editor: React.FC<EditorProps> = ({
           minHeight: "400px",
           overflowY: "auto",
         }}
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      >
+        {content}
+      </div>
 
-      {/* ポップアップ：tempHighlight が有効な場合のみ表示 */}
+      {/* ポップアップ */}
       {tempHighlight && (
         <div
           ref={popupRef}

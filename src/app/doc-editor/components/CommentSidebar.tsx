@@ -9,7 +9,11 @@ interface CommentSidebarProps {
   toggleSidebar: () => void;
   selections: SelectionRange[];
   onAddComment: (selectionId: string, content: string) => void;
-  onReplaceSelection: (selectionId: string, replacement: string) => void;
+  onReplaceSelection: (selectionId: string) => void;
+  onDeclineSelection: (selectionId: string) => void;
+  onDeleteComment: (selectionId: string, commentId: string) => void;
+  onDeleteThread: (selectionId: string) => void;
+  onUpdateThreadReplacement: (selectionId: string, newReplacement: string) => void;
 }
 
 const CommentSidebar: React.FC<CommentSidebarProps> = ({
@@ -18,6 +22,10 @@ const CommentSidebar: React.FC<CommentSidebarProps> = ({
   selections,
   onAddComment,
   onReplaceSelection,
+  onDeclineSelection,
+  onDeleteComment,
+  onDeleteThread,
+  onUpdateThreadReplacement,
 }) => {
   return (
     <div
@@ -35,7 +43,7 @@ const CommentSidebar: React.FC<CommentSidebarProps> = ({
         overflowY: "auto",
       }}
     >
-      {/* トグルボタンを右上に配置 */}
+      {/* トグルボタン */}
       <button
         onClick={toggleSidebar}
         style={{
@@ -48,19 +56,27 @@ const CommentSidebar: React.FC<CommentSidebarProps> = ({
         {isOpen ? "サイドバーを閉じる" : "サイドバーを開く"}
       </button>
 
-      {/* サイドバーが開いてたら内容を表示 */}
       {isOpen && (
         <div style={{ marginTop: "40px" }}>
           <h3>コメントスレッド</h3>
           {selections.length === 0 && <p>コメントはありません</p>}
+
           {selections.map((selection) => (
             <CommentThread
               key={selection.id}
               selectionText={selection.text}
               comments={selection.comments}
+              replacement={selection.replacement}
+              isAccepted={selection.isAccepted}
               onAddComment={(content) => onAddComment(selection.id, content)}
-              onReplace={(replacement) =>
-                onReplaceSelection(selection.id, replacement)
+              onReplace={() => onReplaceSelection(selection.id)}
+              onDecline={() => onDeclineSelection(selection.id)}
+              onDeleteComment={(commentId) =>
+                onDeleteComment(selection.id, commentId)
+              }
+              onDeleteThread={() => onDeleteThread(selection.id)}
+              onUpdateThreadReplacement={(newRep) =>
+                onUpdateThreadReplacement(selection.id, newRep)
               }
             />
           ))}
