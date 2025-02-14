@@ -1,14 +1,20 @@
-'use client';
+"use client";
 
 import React from "react";
 import { SelectionRange } from "../types";
 import CommentThread from "./CommentThread";
+import { AgentConfig } from "../agentConfig";
 
 interface CommentSidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
   selections: SelectionRange[];
-  onAddComment: (selectionId: string, content: string) => void;
+
+  agents: AgentConfig[];
+  onRequestAgentComment: (agentName: string, selectionId: string) => Promise<string>;
+  onRequestAgentSuggestion: (agentName: string, selectionId: string) => Promise<string>;
+
+  onAddComment: (selectionId: string, content: string, author?: string) => void;
   onReplaceSelection: (selectionId: string) => void;
   onDeclineSelection: (selectionId: string) => void;
   onDeleteComment: (selectionId: string, commentId: string) => void;
@@ -20,6 +26,9 @@ const CommentSidebar: React.FC<CommentSidebarProps> = ({
   isOpen,
   toggleSidebar,
   selections,
+  agents,
+  onRequestAgentComment,
+  onRequestAgentSuggestion,
   onAddComment,
   onReplaceSelection,
   onDeclineSelection,
@@ -64,16 +73,28 @@ const CommentSidebar: React.FC<CommentSidebarProps> = ({
           {selections.map((selection) => (
             <CommentThread
               key={selection.id}
+              selectionId={selection.id}
               selectionText={selection.text}
+              startOffset={selection.startOffset}
+              endOffset={selection.endOffset}
               comments={selection.comments}
               replacement={selection.replacement}
               isAccepted={selection.isAccepted}
-              onAddComment={(content) => onAddComment(selection.id, content)}
+
+              agents={agents}
+              onRequestAgentComment={(agentName) =>
+                onRequestAgentComment(agentName, selection.id)
+              }
+              onRequestAgentSuggestion={(agentName) =>
+                onRequestAgentSuggestion(agentName, selection.id)
+              }
+
+              onAddComment={(content, author) =>
+                onAddComment(selection.id, content, author)
+              }
               onReplace={() => onReplaceSelection(selection.id)}
               onDecline={() => onDeclineSelection(selection.id)}
-              onDeleteComment={(commentId) =>
-                onDeleteComment(selection.id, commentId)
-              }
+              onDeleteComment={(commentId) => onDeleteComment(selection.id, commentId)}
               onDeleteThread={() => onDeleteThread(selection.id)}
               onUpdateThreadReplacement={(newRep) =>
                 onUpdateThreadReplacement(selection.id, newRep)
