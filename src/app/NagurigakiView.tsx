@@ -19,7 +19,7 @@ export default function NagurigakiView() {
 
   async function handleAskAi() {
     startTransition(async () => {
-      await requestYesman({ type: "requestOpinion", draft });
+      await requestYesman({ type: "requestOpinion", coreIdea: "", draft });
     });
   }
 

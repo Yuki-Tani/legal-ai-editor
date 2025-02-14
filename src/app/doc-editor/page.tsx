@@ -31,6 +31,7 @@ export default function DocEditorPage() {
 
         const newYesManState = await RequestActionYesman(yesManState, {
           type: "requestOpinion",
+          coreIdea,
           draft: newDraft,
         });
         setYesManState(newYesManState);
