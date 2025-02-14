@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import Editor from "./components/Editor";
 import CommentSidebar from "./components/CommentSidebar";
 import { RequestAction as ReqeustActionToBaseAI } from "../api/_agent/BaseAI";
+import { RequestAction as RequestActionYesman } from "../api/_agent/Yesman";
 import { initalAgentState } from "../api/_agent/types";
 import { SelectionRange, CommentData } from "./types";
 
@@ -13,20 +14,49 @@ export default function DocEditorPage() {
   const [draft, setDraft] = useState("");
   const [selections, setSelections] = useState<SelectionRange[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [baseAIState, requestBaseAI, isBaseAIPending] = useActionState(ReqeustActionToBaseAI, initalAgentState);
+  const [baseAIState, setBaseAIState] = useState(initalAgentState);
+  const [yesManState, setYesManState] = useState(initalAgentState);
 
   const handleStartDiscussion = async () => {
     try {
-        const newState = await ReqeustActionToBaseAI(baseAIState, {
-            type: "requestDraft",
-            coreIdea,
+      const newBaseAIState = await ReqeustActionToBaseAI(baseAIState, {
+        type: "requestDraft",
+        coreIdea,
+      });
+
+      if (newBaseAIState.type === "draft") {
+        const newDraft = newBaseAIState.answer;
+        setDraft(newDraft);
+        setBaseAIState(newBaseAIState);
+
+        const newYesManState = await RequestActionYesman(yesManState, {
+          type: "requestOpinion",
+          draft: newDraft,
         });
-        if (newState.type === "draft") {
-            setDraft(newState.answer);
+        setYesManState(newYesManState);
+
+        if (newYesManState.type === "answering") {
+          const newThread: SelectionRange = {
+            id: uuidv4(),
+            text: "Yesman's Overall Opinion",
+            startOffset: 0,
+            endOffset: 0,
+            comments: [
+              {
+                id: uuidv4(),
+                author: "Yesman",
+                content: newYesManState.answer,
+              },
+            ],
+            replacement: "",
+            isAccepted: false,
+          };
+          setSelections((prev) => [...prev, newThread]);
         }
-      } catch (error) {
-        console.error("Error calling BaseAI RequestAction:", error);
       }
+    } catch (error) {
+      console.error("Error calling BaseAI or Yesman RequestAction:", error);
+    }
   };
 
   const handleContentChange = (content: string) => {
