@@ -47,7 +47,7 @@ export default function DocEditorPage() {
             });
             updateAgentState(ag.name, opinionState);
             if (opinionState.type === "answering") {
-              createCommentThread(`${ag.name}の意見`, ag.name, opinionState.answer);
+              createCommentThread("", ag.name, opinionState.answer);
             }
           }
         }

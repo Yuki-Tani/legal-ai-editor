@@ -75,7 +75,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
 
   // Accept/Declineボタンの無効化
   const disableAcceptDecline = startOffset === endOffset;
-  
+
   const threadStyle: React.CSSProperties = {
     marginBottom: "16px",
     border: "1px solid #ccc",
@@ -87,7 +87,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
 
   return (
     <div style={threadStyle}>
-      <h4>{selectionText}</h4>
+      <h4>{selectionText ? selectionText : "AIによるレビュー"}</h4>
 
       <div 
         style={{ 

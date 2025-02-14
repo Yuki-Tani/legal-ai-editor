@@ -1,6 +1,7 @@
 import { initalAgentState } from "../api/_agent/types";
 import { RequestAction as RequestActionBaseAI } from "../api/_agent/BaseAI";
 import { RequestAction as RequestActionYesman } from "../api/_agent/Yesman";
+import { RequestAction as RequestActionHoureiAI } from "../api/_agent/HoureiAI";
 import { AgentRequestType, AgentState } from "../api/_agent/types";
 
 export interface AgentConfig {
@@ -31,7 +32,18 @@ export const defaultAgents: AgentConfig[] = [
     enableRequests: {
       requestDraft: false,
       requestOpinion: true,
-      requestComment: false,
+      requestComment: true,
+      requestSuggestion: false,
+    },
+    state: initalAgentState,
+  },
+  {
+    name: "HoureiAI",
+    requestAction: RequestActionHoureiAI,
+    enableRequests: {
+      requestDraft: false,
+      requestOpinion: false,
+      requestComment: true,
       requestSuggestion: false,
     },
     state: initalAgentState,
