@@ -63,7 +63,7 @@ export async function RequestAction(
         {
           role: "system",
           content:
-            "あなたは法律文章の専門家です。ユーザーからの法律文書のドラフトに関する意見を求められました。アイデアと要件と見比べて全体の感想と修正すべき場所を教えてください。",
+            "あなたは法律文章の専門家です。ユーザーからの法律文書のドラフトに関する意見を求められました。アイデアと要件と見比べて全体の感想と修正すべき場所を200文字以内で教えてください。",
         },
         {
           role: "user",
@@ -84,7 +84,7 @@ export async function RequestAction(
     case "requestComment": {
       const { selection, coreIdea, draft } = request;
       const { text: selectedText, comments } = selection;
-      const systemMessage = `あなたは法律文章の専門家です。以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。それに従って新しいコメントを考えてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
+      const systemMessage = `あなたは法律文章の専門家です。以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。それに従って200文字以内で新しいコメントを考えてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },

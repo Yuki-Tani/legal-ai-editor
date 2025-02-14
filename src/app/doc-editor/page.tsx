@@ -4,60 +4,101 @@ import { startTransition, useActionState, useState, useTransition } from "react"
 import { v4 as uuidv4 } from "uuid";
 import Editor from "./components/Editor";
 import CommentSidebar from "./components/CommentSidebar";
-import { RequestAction as ReqeustActionToBaseAI } from "../api/_agent/BaseAI";
+import { RequestAction as RequestActionBaseAI } from "../api/_agent/BaseAI";
 import { RequestAction as RequestActionYesman } from "../api/_agent/Yesman";
-import { initalAgentState } from "../api/_agent/types";
+import { AgentState, AgentRequestType, initalAgentState } from "../api/_agent/types";
 import { SelectionRange, CommentData } from "./types";
+import { defaultAgents, AgentConfig } from "./agentConfig";
 
 export default function DocEditorPage() {
   const [coreIdea, setCoreIdea] = useState("");
   const [draft, setDraft] = useState("");
   const [selections, setSelections] = useState<SelectionRange[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [baseAIState, setBaseAIState] = useState(initalAgentState);
-  const [yesManState, setYesManState] = useState(initalAgentState);
+  const [agents, setAgents] = useState<AgentConfig[]>(defaultAgents);
 
-  const handleStartDiscussion = async () => {
+  const handleStartDiscussion = async (draftingAgentName: string) => {
     try {
-      const newBaseAIState = await ReqeustActionToBaseAI(baseAIState, {
-        type: "requestDraft",
-        coreIdea,
-      });
+      const agentIndex = agents.findIndex(
+        (ag) => ag.name === draftingAgentName
+      );
+      if (agentIndex < 0) {
+        console.error("No such agent:", draftingAgentName);
+        return;
+      }
+      const draftingAgent = agents[agentIndex];
 
-      if (newBaseAIState.type === "draft") {
-        const newDraft = newBaseAIState.answer;
-        setDraft(newDraft);
-        setBaseAIState(newBaseAIState);
+      if (!draftingAgent.enableRequests.requestDraft) {
+        console.error(
+          `Agent ${draftingAgentName} is not enabled for requestDraft.`
+        );
+        return;
+      }
 
-        const newYesManState = await RequestActionYesman(yesManState, {
-          type: "requestOpinion",
+      const newDraftState = await draftingAgent.requestAction(
+        draftingAgent.state,
+        {
+          type: "requestDraft",
           coreIdea,
-          draft: newDraft,
-        });
-        setYesManState(newYesManState);
+        }
+      );
+      if (newDraftState.type === "draft") {
+        const newDraft = newDraftState.answer;
+        setDraft(newDraft);
+        updateAgentState(draftingAgentName, newDraftState);
 
-        if (newYesManState.type === "answering") {
-          const newThread: SelectionRange = {
-            id: uuidv4(),
-            text: "Yesman's Overall Opinion",
-            startOffset: 0,
-            endOffset: 0,
-            comments: [
-              {
-                id: uuidv4(),
-                author: "Yesman",
-                content: newYesManState.answer,
-              },
-            ],
-            replacement: "",
-            isAccepted: false,
-          };
-          setSelections((prev) => [...prev, newThread]);
+        for (const ag of agents) {
+          if (ag.enableRequests.requestOpinion) {
+            const opinionState = await ag.requestAction(ag.state, {
+              type: "requestOpinion",
+              coreIdea,
+              draft: newDraft,
+            });
+            updateAgentState(ag.name, opinionState);
+            if (opinionState.type === "answering") {
+              createCommentThread(
+                `${ag.name}'のコメント`,
+                ag.name,
+                opinionState.answer
+              );
+            }
+          }
         }
       }
     } catch (error) {
-      console.error("Error calling BaseAI or Yesman RequestAction:", error);
+      console.error("Error in handleStartDiscussion:", error);
     }
+  };
+
+  const updateAgentState = (agentName: string, newState: any) => {
+    setAgents((prev) =>
+      prev.map((ag) =>
+        ag.name === agentName ? { ...ag, state: newState } : ag
+      )
+    );
+  };
+
+  const createCommentThread = (
+    threadTitle: string,
+    author: string,
+    content: string
+  ) => {
+    const newThread: SelectionRange = {
+      id: uuidv4(),
+      text: threadTitle,
+      startOffset: 0,
+      endOffset: 0,
+      comments: [
+        {
+          id: uuidv4(),
+          author,
+          content,
+        },
+      ],
+      replacement: "",
+      isAccepted: false,
+    };
+    setSelections((prev) => [...prev, newThread]);
   };
 
   const handleContentChange = (content: string) => {
@@ -195,7 +236,10 @@ export default function DocEditorPage() {
             onChange={(e) => setCoreIdea(e.target.value)}
           />
           {/* ディスカッション開始 */}
-          <button style={{ marginTop: "8px", float: "right" }} onClick={handleStartDiscussion}>
+          <button
+            style={{ marginTop: "8px", float: "right" }}
+            onClick={() => handleStartDiscussion("BaseAI")}
+          >
             ディスカッションを開始
           </button>
         </div>

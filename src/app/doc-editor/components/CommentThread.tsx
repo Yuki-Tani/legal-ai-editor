@@ -50,16 +50,6 @@ const CommentThread: React.FC<CommentThreadProps> = ({
     <div style={threadStyle}>
       <h4 style={{ marginBottom: "8px" }}>{selectionText}</h4>
 
-      {/* スレッド全体削除ボタン */}
-      <div style={{ textAlign: "right", marginBottom: "8px" }}>
-        <button
-          style={{ backgroundColor: "#fdd", border: "1px solid #d88", cursor: "pointer" }}
-          onClick={onDeleteThread}
-        >
-          スレッドを削除
-        </button>
-      </div>
-
       {/* コメント一覧 */}
       {comments.map((comment) => (
         <div
@@ -71,7 +61,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
           }}
         >
           <strong>{comment.author}:</strong> {comment.content}
-          <div style={{ marginTop: "4px", textAlign: "right" }}>
+          <div style={{ marginTop: "4px", textAlign: "left" }}>
             <button
               style={{ backgroundColor: "#fdd", border: "1px solid #d88" }}
               onClick={() => onDeleteComment(comment.id)}
@@ -112,6 +102,16 @@ const CommentThread: React.FC<CommentThreadProps> = ({
           </button>
           <button onClick={onDecline}>Decline</button>
         </div>
+      </div>
+
+      {/* スレッド全体削除ボタン */}
+      <div style={{  marginTop: "10px", textAlign: "left", marginBottom: "8px" }}>
+        <button
+          style={{ backgroundColor: "#fdd", border: "1px solid #d88", cursor: "pointer" }}
+          onClick={onDeleteThread}
+        >
+          スレッドを削除
+        </button>
       </div>
     </div>
   );
