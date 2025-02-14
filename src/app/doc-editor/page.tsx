@@ -1,14 +1,12 @@
 'use client';
 
-import { startTransition, useActionState, useState, useTransition } from "react";
+import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Editor from "./components/Editor";
 import CommentSidebar from "./components/CommentSidebar";
-import { RequestAction as RequestActionBaseAI } from "../api/_agent/BaseAI";
-import { RequestAction as RequestActionYesman } from "../api/_agent/Yesman";
-import { AgentState, AgentRequestType, initalAgentState } from "../api/_agent/types";
 import { SelectionRange, CommentData } from "./types";
 import { defaultAgents, AgentConfig } from "./agentConfig";
+import { AgentState } from "../api/_agent/types";
 
 export default function DocEditorPage() {
   const [coreIdea, setCoreIdea] = useState("");
@@ -19,28 +17,21 @@ export default function DocEditorPage() {
 
   const handleStartDiscussion = async (draftingAgentName: string) => {
     try {
-      const agentIndex = agents.findIndex(
+      const draftingAgent = agents.find(
         (ag) => ag.name === draftingAgentName
       );
-      if (agentIndex < 0) {
+      if (!draftingAgent) {
         console.error("No such agent:", draftingAgentName);
         return;
       }
-      const draftingAgent = agents[agentIndex];
-
       if (!draftingAgent.enableRequests.requestDraft) {
-        console.error(
-          `Agent ${draftingAgentName} is not enabled for requestDraft.`
-        );
+        console.error(`Agent ${draftingAgentName} is not enabled for requestDraft.`);
         return;
       }
 
       const newDraftState = await draftingAgent.requestAction(
         draftingAgent.state,
-        {
-          type: "requestDraft",
-          coreIdea,
-        }
+        { type: "requestDraft", coreIdea }
       );
       if (newDraftState.type === "draft") {
         const newDraft = newDraftState.answer;
@@ -56,17 +47,78 @@ export default function DocEditorPage() {
             });
             updateAgentState(ag.name, opinionState);
             if (opinionState.type === "answering") {
-              createCommentThread(
-                `${ag.name}'のコメント`,
-                ag.name,
-                opinionState.answer
-              );
+              createCommentThread(`${ag.name}の意見`, ag.name, opinionState.answer);
             }
           }
         }
       }
     } catch (error) {
       console.error("Error in handleStartDiscussion:", error);
+    }
+  };
+
+  const handleRequestAgentComment = async (
+    agentName: string,
+    selectionId: string
+  ): Promise<string> => {
+    try {
+      const agent = agents.find((ag) => ag.name === agentName);
+      if (!agent || !agent.enableRequests.requestComment) {
+        throw new Error(`Agent ${agentName} not enabled for requestComment.`);
+      }
+      const selection = selections.find((sel) => sel.id === selectionId);
+      if (!selection) {
+        throw new Error("No such selection");
+      }
+
+      const commentState = await agent.requestAction(agent.state, {
+        type: "requestComment",
+        coreIdea,
+        draft,
+        selection,
+      });
+      updateAgentState(agentName, commentState);
+
+      if (commentState.type === "commenting") {
+        return commentState.answer;
+      }
+      return "";
+    } catch (err) {
+      console.error("Error in handleRequestAgentComment:", err);
+      return "";
+    }
+  };
+
+  const handleRequestAgentSuggestion = async (
+    agentName: string,
+    selectionId: string
+  ): Promise<string> => {
+    try {
+      const agent = agents.find((ag) => ag.name === agentName);
+      if (!agent || !agent.enableRequests.requestSuggestion) {
+        throw new Error(`Agent ${agentName} not enabled for requestSuggestion.`);
+      }
+
+      const selection = selections.find((sel) => sel.id === selectionId);
+      if (!selection) {
+        throw new Error("No such selection");
+      }
+
+      const suggestionState = await agent.requestAction(agent.state, {
+        type: "requestSuggestion",
+        coreIdea,
+        draft,
+        selection,
+      });
+      updateAgentState(agentName, suggestionState);
+
+      if (suggestionState.type === "suggesting") {
+        return suggestionState.answer;
+      }
+      return "";
+    } catch (err) {
+      console.error("Error in handleRequestAgentSuggestion:", err);
+      return "";
     }
   };
 
@@ -126,19 +178,20 @@ export default function DocEditorPage() {
   };
 
   // コメント追加
-  const handleAddComment = (selectionId: string, content: string) => {
+  const handleAddComment = (
+    selectionId: string,
+    content: string,
+    author: string = "User"
+  ) => {
     setSelections((prev) =>
       prev.map((sel) => {
         if (sel.id === selectionId) {
           const newComment: CommentData = {
             id: uuidv4(),
-            author: "User",
+            author,
             content,
           };
-          return {
-            ...sel,
-            comments: [...sel.comments, newComment],
-          };
+          return { ...sel, comments: [...sel.comments, newComment] };
         }
         return sel;
       })
@@ -259,6 +312,9 @@ export default function DocEditorPage() {
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
         selections={selections}
+        agents={agents}
+        onRequestAgentComment={handleRequestAgentComment}
+        onRequestAgentSuggestion={handleRequestAgentSuggestion}
         onAddComment={handleAddComment}
         onReplaceSelection={handleReplaceSelection}
         onDeclineSelection={handleDeclineSelection}

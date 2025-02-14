@@ -40,7 +40,7 @@ export async function RequestAction(
         {
           role: "system",
           content:
-            "あなたは法律文章の専門家です。ユーザーからのアイデアと要件に従って法律文書のドラフトを作成してください。",
+            "ユーザーからのアイデアと要件に従って法律文書のドラフトを作成してください。",
         },
         {
           role: "user",
@@ -63,7 +63,7 @@ export async function RequestAction(
         {
           role: "system",
           content:
-            "あなたは法律文章の専門家です。ユーザーからの法律文書のドラフトに関する意見を求められました。アイデアと要件と見比べて全体の感想と修正すべき場所を200文字以内で教えてください。",
+            "ユーザーからの法律文書のドラフトに関する意見を求められました。アイデアと要件と見比べて全体の感想と修正すべき場所を150文字以内で教えてください。",
         },
         {
           role: "user",
@@ -84,7 +84,7 @@ export async function RequestAction(
     case "requestComment": {
       const { selection, coreIdea, draft } = request;
       const { text: selectedText, comments } = selection;
-      const systemMessage = `あなたは法律文章の専門家です。以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。それに従って200文字以内で新しいコメントを考えてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
+      const systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。ユーザとのやりとりの流れに従って200文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },
@@ -110,7 +110,7 @@ export async function RequestAction(
     case "requestSuggestion": {
       const { selection, coreIdea, draft } = request;
       const { text: selectedText } = selection;
-      const systemMessage = `あなたは法律文章の専門家です。以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。それに従って選択部分を入れ替える新しい提案を考えてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
+      const systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。ユーザとのやりとりに従って選選択されたドラフトの一部の文章を入れ替える提案を考えてください。回答は提案だけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },
