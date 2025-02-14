@@ -152,7 +152,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
             disabled={!selectedCommentAgent}
             style={{ marginLeft: "8px" }}
           >
-            AIにコメントを要求
+            コメント要求
           </button>
         </div>
 
@@ -205,7 +205,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
           </button>
         </div>
         <textarea
-          rows={5}
+          rows={10}
           style={{ width: "100%" }}
           value={replacement}
           onChange={(e) => onUpdateThreadReplacement(e.target.value)}

@@ -110,7 +110,7 @@ export async function RequestAction(
     case "requestSuggestion": {
       const { selection, coreIdea, draft } = request;
       const { text: selectedText } = selection;
-      const systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。ユーザとのやりとりに従って選選択されたドラフトの一部の文章を入れ替える提案を考えてください。回答は提案だけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
+      const systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。ユーザとのやりとりに従って、選択されたドラフトの一部の文章を入れ替える提案を考えてください。選択されたドラフトが空の場合には、ユーザとのやりとりに従って法律文書のドラフト全体から改善提案を作成し、どの部分を変更したら良いか明確に指摘してくださいあ。回答は提案だけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },
