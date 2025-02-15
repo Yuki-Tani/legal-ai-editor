@@ -47,8 +47,6 @@ class PromptEngine:
             conn = sqlite3.connect(self.db_file, check_same_thread=False)
             cursor = conn.cursor()
             print(f"Connected to SQLite database at {self.db_file}.")
-
-            # FTS5エクステンションをロード（必要に応じて）
             try:
                 conn.execute('SELECT load_extension("fts5")')
             except sqlite3.OperationalError:

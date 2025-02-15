@@ -43,3 +43,6 @@ next-env.d.ts
 # misc
 venv/
 __pycache__/
+
+# Indexes
+generated/

@@ -17,15 +17,26 @@ const fallbackMessages: Record<AgentRequestType, string> = {
 
 async function callFlaskGetContext(question: string): Promise<string> {
   try {
-    const response = await fetch("http://localhost:5000/api/get_context", {
+    const response = await fetch("http://127.0.0.1:5000/api/get_context", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
     });
-    const data = await response.json();
+    const responseText = await response.text();
+    if (!responseText) {
+      throw new Error("Flask API から空のレスポンスが返されました");
+    }
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      throw new Error("JSON パースに失敗しました: " + parseError);
+    }
+
     if (!response.ok) {
       throw new Error(data.error || "Flask API エラー");
     }
+
     return data.context;
   } catch (error) {
     console.error("Flask API 呼び出しエラー:", error);
@@ -62,12 +73,10 @@ export async function RequestAction(
     case "requestComment": {
       const { selection, coreIdea, draft } = request;
       const { text: selectedText, comments } = selection;
-      // まずはgetChatCompletionを読んで選択された文章から法律用語を抜き出す
       const text = selectedText === "" ? draft : selectedText;
       const searchResults = await callFlaskGetContext(text);
-
-      // searchResultsを使ってコメントを生成
-      const systemMessage = `アイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。以下の法令情報の中で関連しているものを引用して500文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}\n\n法令情報：${searchResults}`;
+      console.log(searchResults);
+      const systemMessage = `アイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。以下の法令情報の中で関連する条文の文章を引用して500文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}\n\n法令情報：${searchResults}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },

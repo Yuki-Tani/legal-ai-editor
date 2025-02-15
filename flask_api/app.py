@@ -1,13 +1,11 @@
-# flask_api/flask_api.py
 from flask import Flask, request, jsonify
 import os
-from prompt import PromptEngine  # PromptEngine の実装ファイル
+from prompt import PromptEngine
 
 app = Flask(__name__)
 
-# 必要なファイルのパスを設定（環境に合わせて調整）
-INDEX_FILE = os.path.join("generated", "embeddings.index")
-DB_FILE = os.path.join("generated", "database.sqlite")
+INDEX_FILE = "flask_api/generated/embeddings.index"
+DB_FILE = "flask_api/generated/database.sqlite"
 
 @app.route('/api/get_context', methods=['POST'])
 def get_context_route():
