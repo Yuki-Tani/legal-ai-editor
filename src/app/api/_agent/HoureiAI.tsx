@@ -15,6 +15,24 @@ const fallbackMessages: Record<AgentRequestType, string> = {
   requestSuggestion: "えっと、無理ですね。",
 };
 
+async function callFlaskGetContext(question: string): Promise<string> {
+  try {
+    const response = await fetch("http://localhost:5000/api/get_context", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Flask API エラー");
+    }
+    return data.context;
+  } catch (error) {
+    console.error("Flask API 呼び出しエラー:", error);
+    return "";
+  }
+}
+
 async function getChatCompletion(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   fallback: string
@@ -46,36 +64,10 @@ export async function RequestAction(
       const { text: selectedText, comments } = selection;
       // まずはgetChatCompletionを読んで選択された文章から法律用語を抜き出す
       const text = selectedText === "" ? draft : selectedText;
-      const leagalTermsExtractSystemMessage = `以下の文章から法律の専門用語を抜き出してください。それぞれの法律用語は,で区切ってください。
-文章：この文書は、サービスの利用条件、機密保持、責任制限などを含む基本的な利用規約を示しています。
-回答：利用条件,機密保持,責任制限,利用規約
-文章：**6. 機密保持** ユーザーと当社は、本サービスを通じて得られた情報、データ、文書に関して守秘義務を負います。
-回答：機密保持,守秘義務
-文章：${text}
-回答：`;
-      const legalTermsExtractMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-        { role: "user", content: leagalTermsExtractSystemMessage },
-      ];
-      let legalTerms = await getChatCompletion(
-        legalTermsExtractMessages,
-        fallbackMessages.requestComment
-      );
-      console.log("legalTerms", legalTerms);
-
-      // 次に、法律用語を切り出す
-      const legalTermsArray = legalTerms.split(",");
-
-      // legalTermsArrayの単語それぞれでhandleSearchを非同期で呼び出して、用語とその法令を文字列として保存(最大５回)
-      const searchResults = await Promise.all(
-        legalTermsArray.slice(0, 5).map(async (term) => {
-          const result = await handleSearch(term);
-          return result;
-        })
-      );
-      console.log("searchResults", searchResults);
+      const searchResults = await callFlaskGetContext(text);
 
       // searchResultsを使ってコメントを生成
-      const systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。以下の法令情報を具体的に引用して200文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}\n\n法令情報：${searchResults.join("\n")}`;
+      const systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。以下の法令情報を詳細に引用して500文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}\n\n法令情報：${searchResults}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },
