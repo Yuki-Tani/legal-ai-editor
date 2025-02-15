@@ -1,0 +1,85 @@
+.editor {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-y: auto;
+  font: 15px 'Inter', sans-serif;
+  line-height: 1.7;
+  background: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.paragraph {
+  margin: 0 0 10px;
+  color: #333;
+}
+
+h1.heading, h2.heading, h3.heading, h4.heading, h5.heading, h6.heading {
+  margin: 6px 0;
+  font-weight: 600;
+  color: #444;
+}
+
+h1.heading {
+  font-size: 2em;
+  border-bottom: 1.5px solid #666;
+  padding-bottom: 3px;
+}
+
+h2.heading {
+  font-size: 1.75em;
+  border-bottom: 1px solid #777;
+  padding-bottom: 3px;
+}
+
+h3.heading {
+  font-size: 1.5em;
+  color: #555;
+}
+
+h4.heading {
+  font-size: 1.25em;
+  color: #666;
+}
+
+h5.heading {
+  font-size: 1.1em;
+  color: #777;
+}
+
+h6.heading {
+  font-size: 1em;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.selected {
+  background: rgba(255, 235, 59, 0.6);
+  padding: 2px 2px;
+  font-weight: bold;
+  display: inline-flex;
+  gap: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.suggested {
+  text-decoration: line-through double;
+  text-decoration-color: red;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-left: 2px;
+  padding-right: 2px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.suggestion {
+  font-weight: bold;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 2px;
+  padding-right: 2px;
+  color: red;
+}
