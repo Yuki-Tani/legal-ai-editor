@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "install:python": "venv/bin/pip install -r flask_api/requirements.txt",
+    "nextdev": "next dev",
     "flask": "python flask_api/app.py",
+    "dev": "concurrently \"npm run nextdev\" \"npm run flask\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

@@ -1,10 +1,8 @@
 import faiss
-import numpy as np
 import os
 from openai import OpenAI
 import openai
 import sqlite3
-from janome.tokenizer import Tokenizer
 import cohere
 from typing import List, Optional, Dict, Tuple
 import sys
@@ -89,19 +87,6 @@ class PromptEngine:
         # 3文字未満の単語を除外
         tokens = response.split(",")
         tokens = [token.strip() for token in tokens if len(token.strip()) >= 3]
-        return tokens
-
-    def extract_tokens(self, text: str) -> List[str]:
-        """Extract tokens from the text using Janome."""
-        tokenizer = Tokenizer()
-        tokens = []
-        for token in tokenizer.tokenize(text):
-            surface = token.surface
-            part_of_speech = token.part_of_speech.split(",")[0]
-            if (part_of_speech == "名詞" or part_of_speech == "固有名詞") and len(
-                surface
-            ) >= 3:
-                tokens.append(surface)
         return tokens
 
     def get_tokens(self, query: str) -> List[str]:
