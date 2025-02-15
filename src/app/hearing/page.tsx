@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ChatBox from "./components/ChatBox";
 import Chat from "./components/Chat";
 import { AgentConfig, defaultAgents } from "../doc-editor/agentConfig";
+import styles from "./page.module.css";
 
 interface HearingLogData {
   label: string;
@@ -11,8 +12,8 @@ interface HearingLogData {
 }
 
 export default function HearingPage() {
-  const [draft, setDraft] = useState("");
-  const [hearings, setHearings] = useState<string[]>([]);
+  const [draftIdea, setDraftIdea] = useState("");
+  const [hearings, setHearings] = useState<string[]>(["文書の種類"]);
   const [chatLog, setChatLog] = useState<HearingLogData[]>([]);
   const [agents, setAgents] = useState<AgentConfig[]>(defaultAgents);
 
@@ -21,9 +22,10 @@ export default function HearingPage() {
     userRequirement: string,
     draftingAgentName: string
   ) => {
-    if (!hearings.length) {
-      // await request(label, userRequirement, draftingAgentName);
+    if (!chatLog.length) {
+      await request(label, userRequirement, draftingAgentName);
     }
+
     setChatLog((prev) => [...prev, { label: label, text: userRequirement }]);
   };
 
@@ -67,6 +69,23 @@ export default function HearingPage() {
     }
   };
 
+  const startDiscussion = hearings.length == chatLog.length;
+
+  useEffect(() => {
+    if (startDiscussion) {
+      const coreIdea: string = chatLog
+        .map((item) => `${item.label}: ${item.text}`)
+        .join("\n\n");
+      setDraftIdea(coreIdea);
+    }
+  }, [chatLog]);
+
+  const handleIdeaSubmit = () => {
+    console.log(draftIdea);
+
+    // create draft
+  };
+
   return (
     <div>
       <div
@@ -76,16 +95,30 @@ export default function HearingPage() {
           display: "flex",
           flexDirection: "column",
         }}
+        className={styles.hearing_page_container}
       >
-        {chatLog.map((item, idx) => (
-          <Chat label={item.label} text={item.text} key={idx}></Chat>
-        ))}
-        <ChatBox
-          handleSubmit={handleSubmit}
-          label="文書の種類"
-          placeholder="aaa"
-          key={chatLog.length}
-        />
+        <div className={styles.chat_log}>
+          {chatLog.map((item, idx) => (
+            <Chat label={item.label} text={item.text} key={idx} />
+          ))}
+        </div>
+        {!startDiscussion ? (
+          <ChatBox
+            handleSubmit={handleSubmit}
+            label={hearings[chatLog.length]}
+            placeholder=""
+            key={chatLog.length}
+          />
+        ) : (
+          <div style={{ padding: "10px" }}>
+            この内容でドラフトを作成します！
+            <br />
+            {chatLog.map((item, idx) => (
+              <div key={idx}>{`${item.label}: ${item.text}`}</div>
+            ))}
+            <button onClick={handleIdeaSubmit}>Go</button>
+          </div>
+        )}
       </div>
     </div>
   );
