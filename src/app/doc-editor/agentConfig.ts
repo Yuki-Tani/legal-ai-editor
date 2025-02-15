@@ -6,10 +6,7 @@ import { AgentRequestType, AgentState } from "../api/_agent/types";
 
 export interface AgentConfig {
   name: string;
-  requestAction: (
-    prevState: AgentState,
-    request: any
-  ) => Promise<AgentState>;
+  requestAction: (prevState: AgentState, request: any) => Promise<AgentState>;
   enableRequests: Record<AgentRequestType, boolean>;
   state: AgentState;
 }
@@ -23,6 +20,7 @@ export const defaultAgents: AgentConfig[] = [
       requestOpinion: true,
       requestComment: true,
       requestSuggestion: true,
+      requestIdeaRequirement: true,
     },
     state: initalAgentState,
   },
@@ -34,6 +32,7 @@ export const defaultAgents: AgentConfig[] = [
       requestOpinion: true,
       requestComment: true,
       requestSuggestion: false,
+      requestIdeaRequirement: false,
     },
     state: initalAgentState,
   },
@@ -45,6 +44,7 @@ export const defaultAgents: AgentConfig[] = [
       requestOpinion: false,
       requestComment: true,
       requestSuggestion: false,
+      requestIdeaRequirement: false,
     },
     state: initalAgentState,
   },

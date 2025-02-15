@@ -1,5 +1,6 @@
 "use server";
 
+import { ResponseFormatJSONSchema } from "openai/src/resources/index.js";
 import { AgentRequest, AgentState, AgentRequestType } from "./types";
 import OpenAI from "openai";
 
@@ -12,6 +13,7 @@ const fallbackMessages: Record<AgentRequestType, string> = {
   requestOpinion: "えっと、無理ですね。",
   requestComment: "あー、わかんないですね。",
   requestSuggestion: "えっと、無理ですね。",
+  requestIdeaRequirement: "うーん、わかんないですね",
 };
 
 async function getChatCompletion(
@@ -23,6 +25,43 @@ async function getChatCompletion(
       model: "gpt-4o-mini",
       messages,
     });
+    return completion.choices[0]?.message?.content ?? fallback;
+  } catch (error) {
+    console.error("OpenAI API Error:", error);
+    return fallback;
+  }
+}
+
+const requirement_list_schema = {
+  name: "requirement_list",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      requirements: {
+        type: `array`,
+        items: {
+          type: "string",
+        },
+      },
+    },
+    required: ["requirements"],
+    additionalProperties: false,
+  },
+};
+
+async function getChatJson(
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  fallback: string,
+  schema: ResponseFormatJSONSchema.JSONSchema
+): Promise<string> {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_schema", json_schema: schema },
+      messages,
+    });
+    console.log(completion.choices[0].message);
     return completion.choices[0]?.message?.content ?? fallback;
   } catch (error) {
     console.error("OpenAI API Error:", error);
@@ -122,6 +161,34 @@ export async function RequestAction(
       return {
         type: "suggesting",
         answer: suggestion,
+        memory: prevState.memory,
+      };
+    }
+
+    case "requestIdeaRequirement": {
+      console.log(request);
+      const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+        {
+          role: "system",
+          content:
+            "ユーザから要求された文章のドラフトを作成するために最低限必要な情報のリストを優先度が高い順に最大2個までリストアップしてください。回答しなくてもドラフトが書ける場合はリストアップしないでください。リストアップした項目はそれぞれユーザへの質問文の形に変換してください。",
+        },
+        {
+          role: "user",
+          // content: `文書の種類:\n${request.coreIdea}\n`,
+          content: `${request.label}:\n${request.userRequirement}`,
+        },
+      ];
+
+      console.log(messages);
+      const answerMsg = await getChatJson(
+        messages,
+        fallbackMessages.requestIdeaRequirement,
+        requirement_list_schema
+      );
+      return {
+        type: "answering",
+        answer: answerMsg,
         memory: prevState.memory,
       };
     }

@@ -1,0 +1,102 @@
+.chatbox_container {
+  max-width: 100%;
+  width: 500px;
+  margin: auto;
+
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: normal;
+  gap: 10px;
+}
+
+.chatbox_textarea {
+  align-items: stretch;
+}
+
+.chatbox_button {
+  align-self: flex-end;
+}
+
+.chat_container {
+  max-width: 100%;
+  width: 500px;
+  margin: auto;
+
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: normal;
+  gap: 10px;
+}
+
+/** text area  */
+/** ref: https://qiita.com/tsmd/items/fce7bf1f65f03239eef0 */
+
+.FlexTextarea {
+  position: relative;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.FlexTextarea__dummy {
+  overflow: hidden;
+  visibility: hidden;
+  box-sizing: border-box;
+  padding: 5px 15px;
+  min-height: 60px;
+  min-width: 100px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  border: 1px solid;
+}
+
+.FlexTextarea__textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 5px 15px;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  border: 1px solid #b6c3c6;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  resize: none;
+}
+
+.FlexTextarea__textarea:focus {
+  /* box-shadow: 0 0 0 2px rgba(36, 68, 211, 0.3); */
+  outline: 0;
+}
+
+/** button */
+/** ref: https://saruwakakun.com/html-css/reference/buttons */
+
+.btn_border {
+  display: inline-block;
+  padding: 0.3em 1em;
+  text-decoration: none;
+  color: #67c5ff;
+  border: solid 2px #67c5ff;
+  background: white;
+  border-radius: 3px;
+  transition: 0.4s;
+}
+
+.btn_border:hover {
+  background: #67c5ff;
+  color: white;
+}
+
+.btn_border:disabled {
+  background: white;
+  color: #adadad;
+  border: solid 2px #adadad;
+}
