@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ChatBox from "./components/ChatBox";
 import Chat from "./components/Chat";
 import { AgentConfig, defaultAgents } from "../doc-editor/agentConfig";
 import styles from "./page.module.css";
+import { AppStateContext } from "../provider";
+import { useRouter } from "next/navigation";
 
 interface HearingLogData {
   label: string;
@@ -16,6 +18,9 @@ export default function HearingPage() {
   const [hearings, setHearings] = useState<string[]>(["文書の種類"]);
   const [chatLog, setChatLog] = useState<HearingLogData[]>([]);
   const [agents, setAgents] = useState<AgentConfig[]>(defaultAgents);
+
+  const providedObject = useContext(AppStateContext);
+  const router = useRouter();
 
   const handleSubmit = async (
     label: string,
@@ -83,7 +88,9 @@ export default function HearingPage() {
   const handleIdeaSubmit = () => {
     console.log(draftIdea);
 
-    // create draft
+    providedObject?.setDraft(draftIdea);
+
+    router.push("/doc-editor");
   };
 
   return (
@@ -116,7 +123,9 @@ export default function HearingPage() {
             {chatLog.map((item, idx) => (
               <div key={idx}>{`${item.label}: ${item.text}`}</div>
             ))}
-            <button onClick={handleIdeaSubmit}>Go</button>
+            <button onClick={handleIdeaSubmit} className={styles.btn_border}>
+              Go
+            </button>
           </div>
         )}
       </div>

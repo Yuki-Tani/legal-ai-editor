@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Editor from "./components/Editor";
 import CommentSidebar from "./components/CommentSidebar";
 import { SelectionRange, CommentData } from "./types";
 import { defaultAgents, AgentConfig } from "./agentConfig";
 import { AgentState } from "../api/_agent/types";
+import { AppStateContext } from "../provider";
 
 export default function DocEditorPage() {
-  const [coreIdea, setCoreIdea] = useState("");
+  const providedObject = useContext(AppStateContext);
+
+  const [coreIdea, setCoreIdea] = useState(providedObject?.draft);
   const [draft, setDraft] = useState("");
   const [selections, setSelections] = useState<SelectionRange[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -17,15 +20,15 @@ export default function DocEditorPage() {
 
   const handleStartDiscussion = async (draftingAgentName: string) => {
     try {
-      const draftingAgent = agents.find(
-        (ag) => ag.name === draftingAgentName
-      );
+      const draftingAgent = agents.find((ag) => ag.name === draftingAgentName);
       if (!draftingAgent) {
         console.error("No such agent:", draftingAgentName);
         return;
       }
       if (!draftingAgent.enableRequests.requestDraft) {
-        console.error(`Agent ${draftingAgentName} is not enabled for requestDraft.`);
+        console.error(
+          `Agent ${draftingAgentName} is not enabled for requestDraft.`
+        );
         return;
       }
 
@@ -96,7 +99,9 @@ export default function DocEditorPage() {
     try {
       const agent = agents.find((ag) => ag.name === agentName);
       if (!agent || !agent.enableRequests.requestSuggestion) {
-        throw new Error(`Agent ${agentName} not enabled for requestSuggestion.`);
+        throw new Error(
+          `Agent ${agentName} not enabled for requestSuggestion.`
+        );
       }
 
       const selection = selections.find((sel) => sel.id === selectionId);
@@ -205,9 +210,7 @@ export default function DocEditorPage() {
   ) => {
     setSelections((prev) =>
       prev.map((sel) =>
-        sel.id === selectionId
-          ? { ...sel, replacement: newReplacement }
-          : sel
+        sel.id === selectionId ? { ...sel, replacement: newReplacement } : sel
       )
     );
   };
@@ -226,9 +229,7 @@ export default function DocEditorPage() {
     // isAccepted = true で無効化
     setSelections((prev) =>
       prev.map((sel) =>
-        sel.id === selectionId
-          ? { ...sel, isAccepted: true }
-          : sel
+        sel.id === selectionId ? { ...sel, isAccepted: true } : sel
       )
     );
   };
@@ -237,9 +238,7 @@ export default function DocEditorPage() {
   const handleDeclineSelection = (selectionId: string) => {
     setSelections((prev) =>
       prev.map((sel) =>
-        sel.id === selectionId
-          ? { ...sel, replacement: "" }
-          : sel
+        sel.id === selectionId ? { ...sel, replacement: "" } : sel
       )
     );
   };
@@ -280,7 +279,9 @@ export default function DocEditorPage() {
         }}
       >
         {/* コアアイデア・要件 */}
-        <div style={{ position: "relative", marginBottom: "100px", zIndex: 10 }}>
+        <div
+          style={{ position: "relative", marginBottom: "100px", zIndex: 10 }}
+        >
           <label>コアアイデア・要件:</label>
           <textarea
             rows={3}

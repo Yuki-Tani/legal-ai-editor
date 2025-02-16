@@ -78,8 +78,13 @@ export async function RequestAction(
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
           role: "system",
-          content:
-            "ユーザーからのアイデアと要件に従って法律文書のドラフトを作成してください。",
+          content: `
+# 命令
+ユーザーからのアイデアと要件をもとに、法律に関わる文書のドラフトを作成してください。
+# 出力
+  * 作成したドラフト文章のみを出力してください。
+  * それ以外のユーザーに対する話しかけ等は不要です。 
+`,
         },
         {
           role: "user",
