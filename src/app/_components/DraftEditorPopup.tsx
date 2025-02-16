@@ -1,3 +1,5 @@
+'use client'
+
 import { CSSProperties, JSX, ReactNode, useEffect, useState } from "react"
 import { useDraftContext } from "./DraftContext";
 

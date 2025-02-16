@@ -141,6 +141,6 @@ function DraftElementHeading(props: RenderElementProps): JSX.Element {
     case 6:
       return <h6 className={styles.heading} {...props.attributes}>{props.children}</h6>;
     default:
-      return <></>;
+      return <h6 className={styles.heading} {...props.attributes}>{props.children}</h6>;
   }
 }

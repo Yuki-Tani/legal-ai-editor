@@ -18,7 +18,8 @@
     "react-dom": "^19.0.0",
     "slate": "^0.112.0",
     "slate-react": "^0.112.1",
-    "uuid": "^11.0.5"
+    "uuid": "^11.0.5",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

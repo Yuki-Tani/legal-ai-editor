@@ -1,11 +1,15 @@
 import { Editor, Selection, Text, Transforms, Range } from "slate"
 import { ReactEditor } from "slate-react";
 
+////////////////////////////////////////
+// Draft
+// NOTE: If you touch this definition, maybe you should also touch ./DraftResponseFormat.ts
+
 export type Draft = (DraftElement | DraftText)[];
 
 export type DraftElement =
   { type: 'paragraph', children: DraftText[] } |
-  { type: 'heading', level: 1 | 2 | 3 | 4 | 5 | 6, children: DraftText[] }
+  { type: 'heading', level: number, children: DraftText[] }
 ;
 
 export type DraftText =
@@ -13,6 +17,8 @@ export type DraftText =
   { text: string, selected: true, ids?: string[] } |
   { text: string, suggested: true, suggestion: string }
 ;
+
+////////////////////////////////////////
 
 export type DraftSelection = Selection;
 
