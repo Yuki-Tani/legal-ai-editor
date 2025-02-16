@@ -20,6 +20,8 @@
     ],
     "paths": {
       "@/api/*": ["./src/app/api/*"],
+      "@/components/*": ["./src/app/_components/*"],
+      "@/types/*": ["./src/app/_types/*"],
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

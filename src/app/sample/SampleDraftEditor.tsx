@@ -6,6 +6,7 @@ import DraftEditor from "../_components/DraftEditor";
 import { DraftEditorFocusedRangePopup } from "../_components/DraftEditorPopup";
 import { useDraftAccessorContext } from "../_components/DraftContext";
 
+
 export default function SampleDraftEditor(): React.ReactElement {
   const draftAccessor = useDraftAccessorContext();
 

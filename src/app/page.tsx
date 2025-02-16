@@ -8,7 +8,7 @@ export default function Home() {
       <h2>HOME</h2>
       <Link href="/doc-editor"> ドキュメントエディタへ </Link>
       <br />
-      <Link href="/sample"> Next.js サンプルページへ </Link>
+      <Link href="/sample"> サンプルページへ </Link>
       <br />
       <Link href="/interaction">インタラクションのテスト</Link> 
 

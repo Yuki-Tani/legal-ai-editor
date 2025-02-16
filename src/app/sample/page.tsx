@@ -1,6 +1,7 @@
 import { DraftContext } from "../_components/DraftContext";
 import SampleCallingRouteHandler from "./SampleCallingRouteHandler";
 import SampleCallingServerAction from "./SampleCallingServerAction";
+import SampleCommonDraftWriter from "./SampleCommonDraftWriter";
 import SampleDraftEditor from "./SampleDraftEditor";
 
 // NEXT.js では、page.tsx というファイル名のファイルを定義するだけで、URL に対応するページが作成される。
@@ -20,6 +21,10 @@ export default function SamplePage() {
       <DraftContext>
         <h3>Rich Editor Sample</h3>
         <SampleDraftEditor />
+      </DraftContext>
+      <DraftContext>
+        <h3>CommonDraftWriter</h3>
+        <SampleCommonDraftWriter />
       </DraftContext>
     </div>
   );
