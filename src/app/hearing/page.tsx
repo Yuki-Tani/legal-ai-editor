@@ -7,6 +7,7 @@ import { AgentConfig, defaultAgents } from "../doc-editor/agentConfig";
 import styles from "./page.module.css";
 import { AppStateContext } from "../provider";
 import { useRouter } from "next/navigation";
+import Button from "../_components/Button";
 
 interface HearingLogData {
   label: string;
@@ -123,9 +124,7 @@ export default function HearingPage() {
             {chatLog.map((item, idx) => (
               <div key={idx}>{`${item.label}: ${item.text}`}</div>
             ))}
-            <button onClick={handleIdeaSubmit} className={styles.btn_border}>
-              Go
-            </button>
+            <Button buttonText="Go" handleClicked={handleIdeaSubmit} />
           </div>
         )}
       </div>

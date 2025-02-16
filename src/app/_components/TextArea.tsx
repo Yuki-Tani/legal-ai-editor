@@ -5,6 +5,7 @@ import styles from "./components.module.css";
 
 type TextAreaProps = {
   onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  value?: string;
   placeholder?: string;
   label?: string;
 };
@@ -26,7 +27,7 @@ const Button: React.FC<TextAreaProps> = (props) => {
           id="FlexTextarea"
           className={styles.FlexTextarea__textarea}
           placeholder={props.placeholder}
-          value={content}
+          value={props.value}
           onChange={(e) => handleChanged(e)}
           autoComplete="off"
         ></textarea>
