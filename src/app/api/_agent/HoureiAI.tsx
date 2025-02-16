@@ -76,7 +76,7 @@ export async function RequestAction(
       const text = selectedText === "" ? draft : selectedText;
       const searchResults = await callFlaskGetContext(text);
       console.log(searchResults);
-      const systemMessage = `アイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。以下の法令情報の中で関連する条文の文章を引用して500文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}\n\n法令情報：${searchResults}`;
+      const systemMessage = `アイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。以下の法令情報の中で関連する条文の文章を引用して500文字以内で修正提案コメントを考えてください。回答は修正提案コメントだけを返すようにしてください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}\n\n法令情報：${searchResults}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },
