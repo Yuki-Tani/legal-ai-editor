@@ -1,38 +1,99 @@
 /** button */
 
-.btn_border {
+.btn_gradient {
   display: inline-block;
   font-size: 0.9em;
-  padding: 0.2em 0.8em;
+  padding: 0.5em 1em;
+  margin: 4px;
   text-decoration: none;
-  color: var(--sub-color);
-  border: solid 2px var(--sub-color);
-  background: white;
-  border-radius: 3px;
-  transition: 0.4s;
-}
-
-.btn_border:hover {
-  background: var(--sub-color);
+  border-radius: 5px;
   color: white;
+  background-image: linear-gradient(-45deg, #6797ff 50%, #6f9bfc 100%);
+  transition: 0.3s;
+  transition-timing-function: ease-in;
+  border: unset;
+  cursor: pointer;
 }
 
-.btn_border:disabled {
+.btn_gradient:hover {
+  background-image: linear-gradient(
+    45deg,
+    #6797ff 0%,
+    #80a8ff 50%,
+    #6f9bfc 100%
+  );
+}
+
+.btn_gradient:disabled {
   background: white;
   color: #888888;
-  border: solid 2px #adadad;
+  box-shadow: 0 0 0 1.5px #adadad;
+  transition: 0.3s;
+  transition-timing-function: ease-out;
+}
+
+.btn_gradient:active {
+  -webkit-transform: translateY(0.1em);
+  transform: translateY(0.1em);
+  /* border-bottom: none; */
+  transition: 0s;
+  transition-timing-function: ease;
+}
+
+.btn_gradient:disabled:active {
+  transform: none;
+}
+
+.btn_notice {
+  display: inline-block;
+  font-size: 0.9em;
+  padding: 0.5em 1em;
+  margin: 4px;
+  text-decoration: none;
+  border-radius: 5px;
+  color: white;
+  background-color: var(--notice-color);
+  transition: 0.3s;
+  transition-timing-function: ease-in;
+  border: unset;
+  cursor: pointer;
+}
+
+.btn_notice:hover {
+  background-color: var(--notice-color-dark);
+}
+
+.btn_notice:disabled {
+  background: white;
+  color: #888888;
+  box-shadow: 0 0 0 1.5px #adadad;
+  transition: 0.3s;
+  transition-timing-function: ease-out;
+}
+
+.btn_notice:active {
+  -webkit-transform: translateY(0.1em);
+  transform: translateY(0.1em);
+  /* border-bottom: none; */
+  transition: 0s;
+  transition-timing-function: ease;
+}
+
+.btn_notice:disabled:active {
+  transform: none;
 }
 
 /** loading animation */
 
 .button_loader {
   position: relative;
+  padding: 0 0.8em;
 }
 
 .loader {
   position: relative;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1.1em;
+  height: 1.1em;
 }
 
 .loader div {

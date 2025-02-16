@@ -7,6 +7,9 @@
   --sub-color: #9da8d6;
   --sub-color-dark: #464668;
   --sub-color-light: #bbbeca;
+  --notice-color: #f18c8c;
+  --notice-color-dark: #f56969;
+  --notice-color-light: #e9aaaa;
 }
 
 html,

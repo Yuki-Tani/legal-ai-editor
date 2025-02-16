@@ -9,6 +9,7 @@ type ButtonProps = {
   disabled?: boolean;
   onlyOnce?: boolean;
   useLoadingAnimation?: boolean;
+  notice?: boolean;
 };
 
 const Loading = () => (
@@ -42,7 +43,7 @@ const Button: React.FC<ButtonProps> = (props) => {
     <div className={styles.chatbox_button}>
       <button
         onClick={() => handleClicked()}
-        className={styles.btn_border}
+        className={props.notice ? styles.btn_notice : styles.btn_gradient}
         disabled={props.disabled || disabled}
       >
         {loading ? <Loading /> : props.buttonText}

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CommentData } from "../types";
 import { AgentConfig } from "../agentConfig";
+import Button from "../../_components/Button";
 
 interface CommentThreadProps {
   selectionId: string;
@@ -46,8 +47,12 @@ const CommentThread: React.FC<CommentThreadProps> = ({
     if (inputValue.trim()) {
       onAddComment(inputValue.trim());
       setInputValue("");
+      setCommentButtonKey((prev) => prev + 1);
     }
   };
+  const [commentButtonKey, setCommentButtonKey] = useState(0);
+  const [requestCommentKey, setRequestCommentKey] = useState(0);
+  const [requestSuggestionKey, setRequestSuggestionKey] = useState(0);
 
   // AIのコメントを要求
   const commentAgents = agents.filter((ag) => ag.enableRequests.requestComment);
@@ -59,18 +64,24 @@ const CommentThread: React.FC<CommentThreadProps> = ({
     if (aiAnswer) {
       onAddComment(aiAnswer, selectedCommentAgent);
     }
+    setRequestCommentKey((prev) => prev + 1);
   };
 
   // 提案を要求
-  const suggestionAgents = agents.filter((ag) => ag.enableRequests.requestSuggestion);
+  const suggestionAgents = agents.filter(
+    (ag) => ag.enableRequests.requestSuggestion
+  );
   const [selectedSuggestionAgent, setSelectedSuggestionAgent] = useState("");
   const handleRequestSuggestion = async () => {
     if (!selectedSuggestionAgent) return;
     // AI提案を取得 → replacementに設定
-    const aiSuggestion = await onRequestAgentSuggestion(selectedSuggestionAgent);
+    const aiSuggestion = await onRequestAgentSuggestion(
+      selectedSuggestionAgent
+    );
     if (aiSuggestion) {
       onUpdateThreadReplacement(aiSuggestion);
     }
+    setRequestSuggestionKey((prev) => prev + 1);
   };
 
   // Accept/Declineボタンの無効化
@@ -89,17 +100,15 @@ const CommentThread: React.FC<CommentThreadProps> = ({
     <div style={threadStyle}>
       <h4>{selectionText ? selectionText : "AIによるレビュー"}</h4>
 
-      <div 
-        style={{ 
+      <div
+        style={{
           marginTop: "12px",
           borderTop: "1px solid #ddd",
           paddingTop: "8px",
         }}
       >
         <label style={{ display: "block", marginBottom: "4px" }}>
-          <strong>
-              コメント
-          </strong>
+          <strong>コメント</strong>
         </label>
 
         {/* 既存コメント一覧 */}
@@ -112,13 +121,18 @@ const CommentThread: React.FC<CommentThreadProps> = ({
             }}
           >
             <strong>{comment.author}:</strong> {comment.content}
-            <div style={{ marginTop: "4px", textAlign: "right" }}>
-              <button
-                style={{ backgroundColor: "#fdd", border: "1px solid #d88" }}
-                onClick={() => onDeleteComment(comment.id)}
-              >
-                コメントを削除
-              </button>
+            <div
+              style={{
+                marginTop: "4px",
+                textAlign: "right",
+                fontSize: "0.8em",
+              }}
+            >
+              <Button
+                buttonText="コメントを削除"
+                handleClicked={() => onDeleteComment(comment.id)}
+                notice
+              />
             </div>
           </div>
         ))}
@@ -130,8 +144,8 @@ const CommentThread: React.FC<CommentThreadProps> = ({
             marginBottom: "16px",
             paddingTop: "8px",
             paddingBottom: "8px",
-            display: "flex", 
-            justifyContent: "space-between", 
+            display: "flex",
+            justifyContent: "space-between",
           }}
         >
           <div>
@@ -147,13 +161,15 @@ const CommentThread: React.FC<CommentThreadProps> = ({
               ))}
             </select>
           </div>
-          <button
-            onClick={handleRequestComment}
-            disabled={!selectedCommentAgent}
-            style={{ marginLeft: "8px" }}
-          >
-            コメント要求
-          </button>
+          <div style={{ textAlign: "right", fontSize: "0.8em" }}>
+            <Button
+              buttonText="コメント要求"
+              handleClicked={handleRequestComment}
+              disabled={!selectedCommentAgent}
+              useLoadingAnimation
+              key={requestCommentKey}
+            />
+          </div>
         </div>
 
         {/* 新規コメント追加 (ユーザー手動) */}
@@ -164,24 +180,36 @@ const CommentThread: React.FC<CommentThreadProps> = ({
             rows={5}
             style={{ width: "100%" }}
           />
-          <div style={{ textAlign: "right" }}>
-            <button onClick={handleSend} style={{ marginTop: "4px"}}>
-              コメント追加
-            </button>
+          <div style={{ textAlign: "right", fontSize: "0.8em" }}>
+            <Button
+              buttonText="コメント追加"
+              handleClicked={handleSend}
+              onlyOnce
+              disabled={!inputValue.length}
+              key={commentButtonKey}
+            />
           </div>
         </div>
       </div>
 
       {/* 提案 */}
-      <div style={{ marginTop: "12px", borderTop: "1px solid #ddd", paddingTop: "8px" }}>
+      <div
+        style={{
+          marginTop: "12px",
+          borderTop: "1px solid #ddd",
+          paddingTop: "8px",
+        }}
+      >
         <label style={{ display: "block", marginBottom: "4px" }}>
-          <strong>
-              提案
-          </strong>
+          <strong>提案</strong>
         </label>
         {/* プルダウン + ボタン */}
         <div
-          style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "8px",
+          }}
         >
           <div>
             <select
@@ -196,13 +224,15 @@ const CommentThread: React.FC<CommentThreadProps> = ({
               ))}
             </select>
           </div>
-          <button
-            onClick={handleRequestSuggestion}
-            disabled={!selectedSuggestionAgent}
-            style={{ marginLeft: "8px" }}
-          >
-            提案を要求
-          </button>
+          <div style={{ textAlign: "right", fontSize: "0.8em" }}>
+            <Button
+              buttonText="提案を要求"
+              handleClicked={handleRequestSuggestion}
+              key={requestSuggestionKey}
+              disabled={!selectedSuggestionAgent}
+              useLoadingAnimation
+            />
+          </div>
         </div>
         <textarea
           rows={10}
@@ -210,31 +240,42 @@ const CommentThread: React.FC<CommentThreadProps> = ({
           value={replacement}
           onChange={(e) => onUpdateThreadReplacement(e.target.value)}
         />
-        <div style={{ marginTop: "4px", textAlign: "right" }}>
-          <button 
-            style={{ marginRight: "8px" }}
-            onClick={onReplace}
-            disabled={disableAcceptDecline}
-          >
-            Accept
-          </button>
-          <button 
-            onClick={onDecline}
-            disabled={disableAcceptDecline}
-          >
-            Decline
-          </button>
+        <div
+          style={{
+            marginTop: "4px",
+            textAlign: "right",
+            display: "flex",
+            justifyContent: "flex-end",
+            fontSize: "0.85em",
+          }}
+        >
+          <Button
+            buttonText="Accept"
+            handleClicked={onReplace}
+            disabled={disableAcceptDecline || !replacement.length}
+          />
+          <Button
+            buttonText="Decline"
+            handleClicked={onDecline}
+            disabled={disableAcceptDecline || !replacement.length}
+          />
         </div>
       </div>
 
       {/* スレッド全体削除ボタン */}
-      <div style={{ marginTop: "10px", textAlign: "left", marginBottom: "8px" }}>
-        <button
-          style={{ backgroundColor: "#fdd", border: "1px solid #d88", cursor: "pointer" }}
-          onClick={onDeleteThread}
-        >
-          スレッドを削除
-        </button>
+      <div
+        style={{
+          marginTop: "10px",
+          textAlign: "left",
+          marginBottom: "8px",
+          fontSize: "0.8em",
+        }}
+      >
+        <Button
+          buttonText="スレッドを削除"
+          handleClicked={onDeleteThread}
+          notice
+        />
       </div>
     </div>
   );

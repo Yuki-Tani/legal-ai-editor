@@ -30,6 +30,14 @@ export default function HearingPage() {
           useLoadingAnimation
           // type="ai_gradation"
         />
+
+        <p>目立つ色</p>
+        <Button
+          buttonText="button"
+          handleClicked={() => console.log("clicked!")}
+          onlyOnce
+          notice
+        />
       </div>
 
       <div>
