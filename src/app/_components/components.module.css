@@ -1,14 +1,3 @@
-:root {
-  --text-color: #352e2b;
-  --text-color-light: #aeafaf;
-  --main-color: #4b5f65;
-  --main-color-dark: #2c393d;
-  --main-color-light: #b7c6c7;
-  --sub-color: #9da8d6;
-  --sub-color-dark: #464668;
-  --sub-color-light: #bbbeca;
-}
-
 /** button */
 
 .btn_border {
