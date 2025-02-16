@@ -296,6 +296,7 @@ export default function DocEditorPage() {
           <TextArea
             onChange={(e) => setCoreIdea(e.target.value)}
             label="コアアイデア・要件:"
+            value={coreIdea}
           />
           {/* ディスカッション開始 */}
           <div style={{ alignSelf: "flex-end" }}>
