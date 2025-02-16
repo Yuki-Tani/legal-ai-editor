@@ -12,6 +12,9 @@ export default function Home() {
       <br />
       <Link href="/interaction">インタラクションのテスト</Link> 
 
+      <br />
+      <Link href="/hearing"> ドラフト作成ヒアリングページへ </Link>
+
       <NagurigakiView />
     </div>
   );

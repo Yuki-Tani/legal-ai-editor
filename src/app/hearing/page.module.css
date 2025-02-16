@@ -1,0 +1,14 @@
+.hearing_page_container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  /* width: 80%;
+  margin: auto; */
+}
+
+.chat_log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
