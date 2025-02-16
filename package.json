@@ -16,6 +16,8 @@
     "openai": "^4.83.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "slate": "^0.112.0",
+    "slate-react": "^0.112.1",
     "uuid": "^11.0.5"
   },
   "devDependencies": {
