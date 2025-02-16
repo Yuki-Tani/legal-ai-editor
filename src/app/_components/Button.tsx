@@ -6,6 +6,7 @@ import styles from "./components.module.css";
 type ButtonProps = {
   buttonText: string;
   handleClicked: () => void;
+  disabled?: boolean;
   onlyOnce?: boolean;
   useLoadingAnimation?: boolean;
 };
@@ -42,7 +43,7 @@ const Button: React.FC<ButtonProps> = (props) => {
       <button
         onClick={() => handleClicked()}
         className={styles.btn_border}
-        disabled={disabled}
+        disabled={props.disabled || disabled}
       >
         {loading ? <Loading /> : props.buttonText}
       </button>

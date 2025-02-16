@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import styles from "./components.module.css";
 
 type TextAreaProps = {
-  handleChanged: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
   label?: string;
 };
@@ -14,7 +14,7 @@ const Button: React.FC<TextAreaProps> = (props) => {
 
   const handleChanged = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(event.target.value);
-    props.handleChanged(event);
+    props.onChange(event);
   };
 
   return (

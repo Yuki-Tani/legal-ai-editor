@@ -8,6 +8,8 @@ import { SelectionRange, CommentData } from "./types";
 import { defaultAgents, AgentConfig } from "./agentConfig";
 import { AgentState } from "../api/_agent/types";
 import { AppStateContext } from "../provider";
+import Button from "../_components/Button";
+import TextArea from "../_components/TextArea";
 
 export default function DocEditorPage() {
   const providedObject = useContext(AppStateContext);
@@ -17,6 +19,7 @@ export default function DocEditorPage() {
   const [selections, setSelections] = useState<SelectionRange[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [agents, setAgents] = useState<AgentConfig[]>(defaultAgents);
+  const [ideaKey, setIdeaKey] = useState(0);
 
   const handleStartDiscussion = async (draftingAgentName: string) => {
     try {
@@ -40,6 +43,7 @@ export default function DocEditorPage() {
         const newDraft = newDraftState.answer;
         setDraft(newDraft);
         updateAgentState(draftingAgentName, newDraftState);
+        setIdeaKey((prev) => prev + 1);
 
         for (const ag of agents) {
           if (ag.enableRequests.requestOpinion) {
@@ -280,22 +284,29 @@ export default function DocEditorPage() {
       >
         {/* コアアイデア・要件 */}
         <div
-          style={{ position: "relative", marginBottom: "100px", zIndex: 10 }}
+          style={{
+            position: "relative",
+            marginBottom: "100px",
+            zIndex: 10,
+            display: "flex",
+            flexFlow: "column",
+            gap: "5px",
+          }}
         >
-          <label>コアアイデア・要件:</label>
-          <textarea
-            rows={3}
-            style={{ width: "100%", marginTop: "8px" }}
-            value={coreIdea}
+          <TextArea
             onChange={(e) => setCoreIdea(e.target.value)}
+            label="コアアイデア・要件:"
           />
           {/* ディスカッション開始 */}
-          <button
-            style={{ marginTop: "8px", float: "right" }}
-            onClick={() => handleStartDiscussion("BaseAI")}
-          >
-            ディスカッションを開始
-          </button>
+          <div style={{ alignSelf: "flex-end" }}>
+            <Button
+              buttonText="ディスカッションを開始"
+              handleClicked={() => handleStartDiscussion("BaseAI")}
+              useLoadingAnimation
+              disabled={!coreIdea?.length}
+              key={ideaKey}
+            />
+          </div>
         </div>
 
         {/* Editor */}

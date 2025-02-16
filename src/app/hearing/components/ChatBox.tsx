@@ -2,6 +2,8 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import styles from "./ChatBox.module.css";
+import TextArea from "../../_components/TextArea";
+import Button from "../../_components/Button";
 
 type ChatBoxProps = {
   label: string;
@@ -26,25 +28,19 @@ const ChatBox: React.FC<ChatBoxProps> = (props) => {
   return (
     <div className={styles.chatbox_container}>
       <div className={styles.chatbox_textarea}>
-        <label htmlFor="FlexTextarea">{props.label}</label>
-        <div className={styles.FlexTextarea}>
-          <div className={styles.FlexTextarea__dummy} aria-hidden="true"></div>
-          <textarea
-            id="FlexTextarea"
-            className={styles.FlexTextarea__textarea}
-            placeholder={props.placeholder}
-            onChange={(e) => handleTextChange(e)}
-          ></textarea>
-        </div>
+        <TextArea
+          onChange={(e) => handleTextChange(e)}
+          placeholder={props.placeholder}
+          label={props.label}
+        />
       </div>
       <div className={styles.chatbox_button}>
-        <button
-          onClick={onSubmit}
-          className={styles.btn_border}
+        <Button
+          buttonText="Submit"
+          handleClicked={onSubmit}
           disabled={buttonDisable}
-        >
-          Submit
-        </button>
+          onlyOnce
+        />
       </div>
     </div>
   );

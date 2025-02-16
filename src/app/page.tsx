@@ -13,6 +13,9 @@ export default function Home() {
       <br />
       <Link href="/hearing"> ドラフト作成ヒアリングページへ </Link>
 
+      <br />
+      <Link href="/sample/components"> コンポーネントのサンプルページへ </Link>
+
       <NagurigakiView />
     </div>
   );

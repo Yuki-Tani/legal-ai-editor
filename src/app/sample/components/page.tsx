@@ -1,7 +1,7 @@
 "use client";
 
-import Button from "./Button";
-import TextArea from "./TextArea";
+import Button from "../../_components/Button";
+import TextArea from "../../_components/TextArea";
 
 export default function HearingPage() {
   return (
@@ -28,15 +28,16 @@ export default function HearingPage() {
           handleClicked={() => console.log("clicked!")}
           onlyOnce
           useLoadingAnimation
+          // type="ai_gradation"
         />
       </div>
 
       <div>
         <h3>TextArea</h3>
-        <TextArea handleChanged={() => console.log("changed!")}></TextArea>
+        <TextArea onChange={() => console.log("changed!")}></TextArea>
 
         <TextArea
-          handleChanged={() => console.log("changed!")}
+          onChange={() => console.log("changed!")}
           label="ラベル付きテキストエリア"
           placeholder="ここに記入してください…"
         ></TextArea>
