@@ -10,6 +10,9 @@ export default function Home() {
       <br />
       <Link href="/sample"> Next.js サンプルページへ </Link>
 
+      <br />
+      <Link href="/hearing"> ドラフト作成ヒアリングページへ </Link>
+
       <NagurigakiView />
     </div>
   );
