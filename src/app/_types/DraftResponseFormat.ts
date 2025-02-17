@@ -47,5 +47,10 @@ const DraftElementScheme = z.union([
 ]);
 
 const DraftScheme = z.object({draft: z.array(DraftElementScheme)});
-
 export const OpenAIDraftResponseFormat = zodResponseFormat(DraftScheme, "draft_response");
+
+const ClaimScheme = z.object({claim: z.object({
+  comment: z.string(),
+  selectedDraft: z.array(DraftElementScheme),
+})});
+export const OpenAIClaimResponseFormat = zodResponseFormat(ClaimScheme, "claim_response");

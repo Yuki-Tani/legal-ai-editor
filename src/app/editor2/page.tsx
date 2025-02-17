@@ -1,11 +1,12 @@
 'use client';
 
+import CommonClaimerAction, { Claim } from "@/api/_agent/CommonClaimer";
 import CommonDraftWriterAction from "@/api/_agent/CommonDraftWriter";
 import Button from "@/components/Button";
-import { DraftContext, useDraftAccessorContext } from "@/components/DraftContext";
+import { DraftContext, useDraftContext } from "@/components/DraftContext";
 import DraftEditor from "@/components/DraftEditor";
 import TextArea from "@/components/TextArea";
-import { startTransition, useActionState, useState } from "react";
+import { useState, useTransition } from "react";
 
 export default function Editor2Page() {
   return (
@@ -16,21 +17,27 @@ export default function Editor2Page() {
 }
 
 function Editor2PageContent() {
-  const draftAccessor = useDraftAccessorContext();
+  const [draft, draftAccessor] = useDraftContext();
 
   const [request, setRequest] = useState("");
-  const [draft, updateDraftAction, isPending] = useActionState(CommonDraftWriterAction, []);
-  const [prevDraft, setPrevDraft] = useState(draft);
-
-  function handleRequest() {
-    startTransition(async () => {
-      await updateDraftAction(request);
+  const [isPendingWriteDraft, startWriteDraftTransition] = useTransition();
+  
+  function handleRequestWriteDraft() {
+    startWriteDraftTransition(async () => {
+      const newDraft = await CommonDraftWriterAction(draft, request);
+      draftAccessor.replaceDraft(newDraft);
     });
   }
 
-  if (draft !== prevDraft) {
-    setPrevDraft(draft);
-    draftAccessor.replaceDraft(draft);
+  const [claim, setClaim] = useState<Claim>({ selectedDraft: [], comment: "" });
+  const [isPendingClaim, startClaimTransition] = useTransition();
+  
+  function handleRequestClaim() {
+    startClaimTransition(async () => {
+      const newClaim = await CommonClaimerAction(claim, draft);
+      draftAccessor.replaceDraft(newClaim.selectedDraft);
+      setClaim(newClaim);
+    });
   }
 
   return (
@@ -42,13 +49,31 @@ function Editor2PageContent() {
         onChange={(value) => setRequest(value)}
       />
       <Button
-        onClick={handleRequest}
+        onClick={handleRequestWriteDraft}
         disabled={!request}
-        isLoading={isPending}
+        isLoading={isPendingWriteDraft}
       >
         ドラフトを作成
       </Button>
       <DraftEditor />
+
+      <Button
+        onClick={handleRequestClaim}
+        disabled={draft.length === 0}
+        isLoading={isPendingClaim}
+      >
+        問題点を指摘する
+      </Button>
+      {
+        claim.selectedDraft.length > 0 &&
+          <div>
+            <TextArea
+              label="問題点"
+              value={claim.comment}
+              onChange={() => {}}
+            />
+          </div>
+      }
     </div>
   );
 }
