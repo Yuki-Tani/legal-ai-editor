@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState } from "react";
 import styles from "./ChatBox.module.css";
 import TextArea from "../../_components/TextArea";
 import Button from "../../_components/Button";
@@ -13,34 +13,31 @@ type ChatBoxProps = {
 
 const ChatBox: React.FC<ChatBoxProps> = (props) => {
   const [chat, setChat] = useState("");
-  const [buttonDisable, setButtonDisable] = useState(true);
+  const [hasSubmit, setHasSubmit] = useState(true);
 
   const onSubmit = () => {
-    setButtonDisable(true);
+    setHasSubmit(true);
     props.handleSubmit(props.label, chat, "BaseAI");
-  };
-
-  const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setChat(event.target.value);
-    setButtonDisable(!event.target.value);
   };
 
   return (
     <div className={styles.chatbox_container}>
       <div className={styles.chatbox_textarea}>
         <TextArea
-          onChange={(e) => handleTextChange(e)}
+          value={chat}
+          onChange={setChat}
           placeholder={props.placeholder}
           label={props.label}
         />
       </div>
       <div className={styles.chatbox_button}>
         <Button
-          buttonText="Submit"
-          handleClicked={onSubmit}
-          disabled={buttonDisable}
+          onClick={onSubmit}
+          disabled={chat === "" || hasSubmit}
           onlyOnce
-        />
+        >
+          Submit
+        </Button>
       </div>
     </div>
   );

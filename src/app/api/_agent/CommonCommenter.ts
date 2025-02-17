@@ -7,7 +7,7 @@ const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
 });
 
-export default async function CommonDraftWriterAction(prevDraft: Draft, request: string): Promise<Draft> {
+export default async function CommonCommenterAction(prevDraft: Draft, request: string): Promise<Draft> {
   try {
     const completion = await openai.beta.chat.completions.parse({
       model: "gpt-4o-mini",

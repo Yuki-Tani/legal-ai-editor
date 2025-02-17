@@ -294,19 +294,20 @@ export default function DocEditorPage() {
           }}
         >
           <TextArea
-            onChange={(e) => setCoreIdea(e.target.value)}
+            onChange={(value) => setCoreIdea(value)}
             label="コアアイデア・要件:"
-            value={coreIdea}
+            value={coreIdea ?? ''}
           />
           {/* ディスカッション開始 */}
           <div style={{ alignSelf: "flex-end" }}>
             <Button
-              buttonText="ディスカッションを開始"
-              handleClicked={() => handleStartDiscussion("BaseAI")}
+              onClick={() => handleStartDiscussion("BaseAI")}
               useLoadingAnimation
               disabled={!coreIdea?.length}
               key={ideaKey}
-            />
+            >
+              ディスカッションを開始
+            </Button>
           </div>
         </div>
 

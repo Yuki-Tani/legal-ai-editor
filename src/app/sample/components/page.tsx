@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Button from "../../_components/Button";
 import TextArea from "../../_components/TextArea";
 
 export default function HearingPage() {
+  const [area1, setArea1] = useState("");
+  const [area2, setArea2] = useState("");
+
   return (
     <div>
       <h2>component sample</h2>
@@ -11,33 +15,27 @@ export default function HearingPage() {
       <div>
         <h3>button</h3>
         <p>何回でも押せる</p>
-        <Button
-          buttonText="button"
-          handleClicked={() => console.log("clicked!")}
-        />
+        <Button onClick={() => console.log("clicked!")}>button</Button>
 
         <p>一度だけ</p>
-        <Button
-          buttonText="button"
-          handleClicked={() => console.log("clicked!")}
-          onlyOnce
-        />
+        <Button onClick={() => console.log("clicked!")} onlyOnce>button</Button>
         <p>ローディングアニメーション(AI風)</p>
         <Button
-          buttonText="button"
-          handleClicked={() => console.log("clicked!")}
+          onClick={() => console.log("clicked!")}
           onlyOnce
           useLoadingAnimation
-          // type="ai_gradation"
-        />
+        >
+          button
+        </Button>
       </div>
 
       <div>
         <h3>TextArea</h3>
-        <TextArea onChange={() => console.log("changed!")}></TextArea>
+        <TextArea value={area1} onChange={(value) => { setArea1(value); console.log("changed!"); }}></TextArea>
 
         <TextArea
-          onChange={() => console.log("changed!")}
+          value={area2}
+          onChange={(value) => { setArea2(value); console.log("changed!"); }}
           label="ラベル付きテキストエリア"
           placeholder="ここに記入してください…"
         ></TextArea>

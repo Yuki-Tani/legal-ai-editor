@@ -1,34 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import styles from "./components.module.css";
 
 type TextAreaProps = {
-  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  value?: string;
+  value: string;
+  onChange: (value: string) => void;
   placeholder?: string;
   label?: string;
 };
 
-const Button: React.FC<TextAreaProps> = (props) => {
-  const [content, setContent] = useState("");
-
-  const handleChanged = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(event.target.value);
-    props.onChange(event);
-  };
-
+export default function TextArea({value, onChange, placeholder, label} : TextAreaProps) {
   return (
     <div className={styles.textarea}>
-      <label htmlFor="FlexTextarea">{props.label}</label>
+      <label htmlFor="FlexTextarea">{label}</label>
       <div className={styles.FlexTextarea}>
         <div className={styles.FlexTextarea__dummy} aria-hidden="true"></div>
         <textarea
           id="FlexTextarea"
           className={styles.FlexTextarea__textarea}
-          placeholder={props.placeholder}
-          value={props.value}
-          onChange={(e) => handleChanged(e)}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           autoComplete="off"
         ></textarea>
       </div>
@@ -36,4 +29,3 @@ const Button: React.FC<TextAreaProps> = (props) => {
   );
 };
 
-export default Button;

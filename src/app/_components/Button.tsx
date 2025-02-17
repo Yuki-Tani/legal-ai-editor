@@ -4,11 +4,12 @@ import React, { useState } from "react";
 import styles from "./components.module.css";
 
 type ButtonProps = {
-  buttonText: string;
-  handleClicked: () => void;
+  children: React.ReactNode;
+  onClick: () => void;
   disabled?: boolean;
   onlyOnce?: boolean;
   useLoadingAnimation?: boolean;
+  isLoading?: boolean;
 };
 
 const Loading = () => (
@@ -22,20 +23,19 @@ const Loading = () => (
   </div>
 );
 
-const Button: React.FC<ButtonProps> = (props) => {
-  const [disabled, setDisabled] = useState(false);
+const Button: React.FC<ButtonProps> = ({children, onClick, disabled, onlyOnce, useLoadingAnimation, isLoading}) => {
+  const [innerDisabled, setInnerDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleClicked = () => {
-    if (props.onlyOnce) {
-      setDisabled(true);
+    if (onlyOnce) {
+      setInnerDisabled(true);
     }
-    if (props.useLoadingAnimation) {
-      setDisabled(true);
+    if (useLoadingAnimation) {
+      setInnerDisabled(true);
       setLoading(true);
     }
-
-    props.handleClicked();
+    onClick();
   };
 
   return (
@@ -43,9 +43,9 @@ const Button: React.FC<ButtonProps> = (props) => {
       <button
         onClick={() => handleClicked()}
         className={styles.btn_border}
-        disabled={props.disabled || disabled}
+        disabled={disabled || innerDisabled}
       >
-        {loading ? <Loading /> : props.buttonText}
+        {(loading || isLoading) ? <Loading /> : children}
       </button>
     </div>
   );

@@ -124,7 +124,7 @@ export default function HearingPage() {
             {chatLog.map((item, idx) => (
               <div key={idx}>{`${item.label}: ${item.text}`}</div>
             ))}
-            <Button buttonText="Go" handleClicked={handleIdeaSubmit} />
+            <Button onClick={handleIdeaSubmit}>Go</Button>
           </div>
         )}
       </div>
