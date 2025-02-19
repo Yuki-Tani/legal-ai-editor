@@ -13,6 +13,7 @@ const fallbackMessages: Record<AgentRequestType, string> = {
   requestOpinion: "えっと、無理ですね。",
   requestComment: "あー、法律わかんないです。",
   requestSuggestion: "えっと、無理ですね。",
+  requestIdeaRequirement: "うーん、わかんないですね",
 };
 
 async function callFlaskGetContext(question: string): Promise<string> {
