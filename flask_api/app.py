@@ -86,8 +86,8 @@ def classify_law(text):
         return jsonify({'error': f"JSONデコードエラー: {e}"}),
     return content
 
-@app.route('/api/get_context', methods=['POST'])
-def get_context_route():
+@app.route('/api/get_horei_context', methods=['POST'])
+def get_horei_context_route():
     data = request.get_json()
     if not data or 'question' not in data:
         return jsonify({'error': '質問文が提供されていません'}), 400
@@ -111,7 +111,26 @@ def get_context_route():
             all_contexts += f"【{category}】\n{context}\n\n"
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    return jsonify({'contexts': all_contexts}), 200
+    return jsonify({'context': all_contexts}), 200
+
+@app.route('/api/get_keihin_jirei_context', methods=['POST'])
+def get_keihin_jirei_context_route():
+    data = request.get_json()
+    if not data or 'question' not in data:
+        return jsonify({'error': '質問文が提供されていません'}), 400
+    question = data['question']
+    keihin_jirei_dir = os.path.join(GENERATED_DIR, KEIHIN_JIREI_DIR)
+    if not os.path.exists(keihin_jirei_dir):
+        return jsonify({'error': f"景品表示法事例データが見つかりません"}), 404
+    index_file = os.path.join(keihin_jirei_dir, INDEX_FILE)
+    db_file = os.path.join(keihin_jirei_dir, DB_FILE)
+    
+    try:
+        engine = PromptEngine(index_file=index_file, db_file=db_file)
+        context = engine.get_context(question, top_faiss=10, top_bm25=10, top_cohere=5)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    return jsonify({'context': context}), 200
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

@@ -186,11 +186,11 @@ class PromptEngine:
         context = "\n\n".join(docs)
         return context
 
-    def get_context(self, question: str) -> str:
+    def get_context(self, question: str, top_faiss=10, top_bm25=10, top_cohere=3) -> str:
         # Get top 10 from FAISS and BM25 without duplicates, rerank with Cohere, get top 3
-        faiss_results = self.get_top_faiss_results(question, top_n=10)
+        faiss_results = self.get_top_faiss_results(question, top_n=top_faiss)
         tokens = self.get_tokens(question)
-        bm25_results = self.bm25_search(tokens, top_n=10)
+        bm25_results = self.bm25_search(tokens, top_n=top_bm25)
         combined_results = faiss_results + bm25_results
         # Remove duplicates based on doc_id
         seen_doc_ids = set()
@@ -201,7 +201,7 @@ class PromptEngine:
                 unique_results.append((doc_id, score))
         doc_ids = [doc_id for doc_id, _ in unique_results]
         docs = self.get_docs_from_ids(doc_ids)
-        results = self.rerank_with_cohere(question, docs, doc_ids, top_n=3)
+        results = self.rerank_with_cohere(question, docs, doc_ids, top_n=top_cohere)
 
         # Assemble context from results
         context = self.assemble_context_from_results(results)
