@@ -86,7 +86,13 @@ export default function DocEditorPage() {
       });
       updateAgentState(agentName, commentState);
 
-      if (commentState.type === "commenting") {
+      if (commentState.type === "multipleComments") {
+        // Add each comment separately
+        commentState.answers.forEach(({ author, content }) => {
+          handleAddComment(selectionId, content, author);
+        });
+        return ""; // Return empty string as we've already added the comments
+      } else if (commentState.type === "commenting") {
         return commentState.answer;
       }
       return "";

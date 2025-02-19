@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CommentData } from "../types";
 import { AgentConfig } from "../agentConfig";
+import Button from "../../_components/Button";
 
 interface CommentThreadProps {
   selectionId: string;
@@ -147,13 +148,14 @@ const CommentThread: React.FC<CommentThreadProps> = ({
               ))}
             </select>
           </div>
-          <button
+          <Button
             onClick={handleRequestComment}
             disabled={!selectedCommentAgent}
+            useLoadingAnimation
             style={{ marginLeft: "8px" }}
           >
             コメント要求
-          </button>
+          </Button>
         </div>
 
         {/* 新規コメント追加 (ユーザー手動) */}
