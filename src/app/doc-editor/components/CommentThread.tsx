@@ -152,7 +152,6 @@ const CommentThread: React.FC<CommentThreadProps> = ({
             onClick={handleRequestComment}
             disabled={!selectedCommentAgent}
             useLoadingAnimation
-            style={{ marginLeft: "8px" }}
           >
             コメント要求
           </Button>

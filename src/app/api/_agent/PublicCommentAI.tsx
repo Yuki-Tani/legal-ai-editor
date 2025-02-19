@@ -8,27 +8,7 @@ const openai = new OpenAI({
 });
 
 const fallbackMessages = {
-  requestDraft: "申し訳ありません。役割の特定ができませんでした。",
   requestOpinion: "申し訳ありません。意見を生成できませんでした。",
-};
-
-// Schema for role list response
-const roles_schema = {
-  type: "object",
-  properties: {
-    roles: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          role: { type: "string" },
-          description: { type: "string" },
-        },
-        required: ["role", "description"],
-      },
-    },
-  },
-  required: ["roles"],
 };
 
 async function getRoleList(draft: string): Promise<Array<{ role: string; description: string }>> {
