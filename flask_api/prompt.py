@@ -186,11 +186,11 @@ class PromptEngine:
         context = "\n\n".join(docs)
         return context
 
-    def get_context(self, question: str) -> str:
-        # Get top 10 from FAISS and BM25 without duplicates, rerank with Cohere, get top 5
-        faiss_results = self.get_top_faiss_results(question, top_n=10)
+    def get_context(self, question: str, top_faiss=10, top_bm25=10, top_cohere=3) -> str:
+        # Get top 10 from FAISS and BM25 without duplicates, rerank with Cohere, get top 3
+        faiss_results = self.get_top_faiss_results(question, top_n=top_faiss)
         tokens = self.get_tokens(question)
-        bm25_results = self.bm25_search(tokens, top_n=10)
+        bm25_results = self.bm25_search(tokens, top_n=top_bm25)
         combined_results = faiss_results + bm25_results
         # Remove duplicates based on doc_id
         seen_doc_ids = set()
@@ -201,7 +201,7 @@ class PromptEngine:
                 unique_results.append((doc_id, score))
         doc_ids = [doc_id for doc_id, _ in unique_results]
         docs = self.get_docs_from_ids(doc_ids)
-        results = self.rerank_with_cohere(question, docs, doc_ids, top_n=5)
+        results = self.rerank_with_cohere(question, docs, doc_ids, top_n=top_cohere)
 
         # Assemble context from results
         context = self.assemble_context_from_results(results)
@@ -209,12 +209,12 @@ class PromptEngine:
 
     def call_gpt(self, prompt):
         response = self.client.chat.completions.create(
-            model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]
+            model="gpt-4o", messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content
 
     def call_gpt_messages(self, messages):
         response = self.client.chat.completions.create(
-            model="gpt-4o-mini", messages=messages
+            model="gpt-4o", messages=messages
         )
         return response.choices[0].message.content

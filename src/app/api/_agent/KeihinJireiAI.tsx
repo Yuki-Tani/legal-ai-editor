@@ -1,7 +1,6 @@
 "use server";
 
 import { AgentRequest, AgentState, AgentRequestType } from "./types";
-import { SearchAndGetTextAction } from "../_egov/HoureiApi";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -18,7 +17,7 @@ const fallbackMessages: Record<AgentRequestType, string> = {
 
 async function callFlaskGetContext(question: string): Promise<string> {
   try {
-    const response = await fetch("http://127.0.0.1:5000/api/get_horei_context", {
+    const response = await fetch("http://127.0.0.1:5000/api/get_keihin_jirei_context", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
@@ -28,6 +27,7 @@ async function callFlaskGetContext(question: string): Promise<string> {
       throw new Error("Flask API から空のレスポンスが返されました");
     }
     let data;
+    console.log(responseText);
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
@@ -38,7 +38,7 @@ async function callFlaskGetContext(question: string): Promise<string> {
       throw new Error(data.error || "Flask API エラー");
     }
 
-    return data.context
+    return data.context;
   } catch (error) {
     console.error("Flask API 呼び出しエラー:", error);
     return "";
@@ -61,11 +61,6 @@ async function getChatCompletion(
   }
 }
 
-async function handleSearch(query: string) {
-  const result = await SearchAndGetTextAction(query);
-  return result;
-}
-
 export async function RequestAction(
   prevState: AgentState,
   request: AgentRequest
@@ -76,10 +71,8 @@ export async function RequestAction(
       const { text: selectedText, comments } = selection;
       const text = selectedText === "" ? draft : selectedText;
       const searchResults = await callFlaskGetContext(text);
-      // ターミナルに検索結果を表示
-      console.log("searchResults:");
       console.log(searchResults);
-      const systemMessage = `法律文章についてのアイデアと要件、ユーザーの文章、関連する法令、ユーザとのやりとりが与えられます。以下の法令から条文を1つ引用して500文字以内で修正提案コメントを考えてください。回答はコメントと関連する法令の条文のみを返信してください。\n\nアイデアと要件:\n${coreIdea}\n\nユーザーの文章；${selectedText}\n\n法令の条文：${searchResults}`;
+      const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する品表示法処分事例、ユーザとのやりとりが与えられます。以下の景品表示法処分事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には「事例の処分日時、サービス、処分内容、表示と実際、違反分類、罰則」などの処分事例を詳細に要約した散文文章を含むコメントのみを返信してください。\n\nアイデアと要件:\n${coreIdea}\n\n文章；${selectedText}\n\n品表示法処分事例：${searchResults}`;
 
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemMessage },
