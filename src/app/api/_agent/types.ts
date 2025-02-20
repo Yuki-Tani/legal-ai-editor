@@ -2,13 +2,12 @@ import { SelectionRange } from "../../doc-editor/types";
 
 export type AgentMemory = { summary: string };
 
-export type AgentState = (
-  | { type: "silent" }
-  | { type: "answering"; answer: string }
-  | { type: "draft"; answer: string }
-  | { type: "commenting"; answer: string }
-  | { type: "suggesting"; answer: string }
-) & { memory: AgentMemory };
+export type AgentState = {
+  type: "draft" | "silent" | "answering" | "commenting" | "suggesting" | "multipleComments";
+  answer?: string;
+  answers?: Array<{ author: string; content: string }>;
+  memory: Record<string, any>;
+};
 
 export const initalAgentState: AgentState = {
   type: "silent",
