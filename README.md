@@ -24,8 +24,8 @@ The legal document creation tool with the support of multiple AI assistants. Thi
     - While the development server is running, any updates you make to the source files will automatically be reflected on the page opened in the browser.
 
 ## Download indexes for AI
-1. Download zip file from (https://drive.google.com/file/d/1HYX53Ss9jBFP-7teo7A5WORrrIMID3KC/view?usp=sharing)[https://drive.google.com/file/d/1HYX53Ss9jBFP-7teo7A5WORrrIMID3KC/view?usp=sharing]
-2. Unzip and move it to flask_api/
+1. Download zip file from (https://drive.google.com/file/d/1ktERaUua3FMWCydUrkJ7uRieymAImbck/view?usp=sharing)[https://drive.google.com/file/d/1ktERaUua3FMWCydUrkJ7uRieymAImbck/view?usp=sharing]
+2. Extract the zip file and move the ```generated/``` folder into the ```flask_api/``` directory.
 
 ## Learn more
 
