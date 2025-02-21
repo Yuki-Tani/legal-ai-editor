@@ -10,6 +10,8 @@ app = Flask(__name__)
 GENERATED_DIR = "flask_api/generated"
 HOUREI_DIR = "法令"
 KEIHIN_JIREI_DIR = "景品表示法事例"
+KINOUSEI_DIR = "機能性表示食品"
+TOKUTEI_DIR = "特定商取引事例"
 INDEX_FILE = "embeddings.index"
 DB_FILE = "database.sqlite"
 CATEGORIES = [
@@ -124,6 +126,44 @@ def get_keihin_jirei_context_route():
         return jsonify({'error': f"景品表示法事例データが見つかりません"}), 404
     index_file = os.path.join(keihin_jirei_dir, INDEX_FILE)
     db_file = os.path.join(keihin_jirei_dir, DB_FILE)
+    
+    try:
+        engine = PromptEngine(index_file=index_file, db_file=db_file)
+        context = engine.get_context(question, top_faiss=10, top_bm25=10, top_cohere=5)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    return jsonify({'context': context}), 200
+
+@app.route('/api/get_kinousei_hyouji_syokuhin_context', methods=['POST'])
+def get_kinousei_hyouji_syokuhin_context_route():
+    data = request.get_json()
+    if not data or 'question' not in data:
+        return jsonify({'error': '質問文が提供されていません'}), 400
+    question = data['question']
+    kinousei_dir = os.path.join(GENERATED_DIR, KINOUSEI_DIR)
+    if not os.path.exists(kinousei_dir):
+        return jsonify({'error': f"機能性表示食品データが見つかりません"}), 404
+    index_file = os.path.join(kinousei_dir, INDEX_FILE)
+    db_file = os.path.join(kinousei_dir, DB_FILE)
+    
+    try:
+        engine = PromptEngine(index_file=index_file, db_file=db_file)
+        context = engine.get_context(question, top_faiss=10, top_bm25=10, top_cohere=5)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    return jsonify({'context': context}), 200
+
+@app.route('/api/get_tokutei_syoutorihiki_jirei_context', methods=['POST'])
+def get_tokutei_syoutorihiki_jirei_context_route():
+    data = request.get_json()
+    if not data or 'question' not in data:
+        return jsonify({'error': '質問文が提供されていません'}), 400
+    question = data['question']
+    tokutei_dir = os.path.join(GENERATED_DIR, TOKUTEI_DIR)
+    if not os.path.exists(tokutei_dir):
+        return jsonify({'error': f"特定商取引データが見つかりません"}), 404
+    index_file = os.path.join(tokutei_dir, INDEX_FILE)
+    db_file = os.path.join(tokutei_dir, DB_FILE)
     
     try:
         engine = PromptEngine(index_file=index_file, db_file=db_file)
