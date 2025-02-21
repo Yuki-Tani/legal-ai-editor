@@ -40,7 +40,7 @@ export default function DocEditorPage() {
         { type: "requestDraft", coreIdea }
       );
       if (newDraftState.type === "draft") {
-        const newDraft = newDraftState.answer;
+        const newDraft = newDraftState.answer ?? "";
         setDraft(newDraft);
         updateAgentState(draftingAgentName, newDraftState);
         setIdeaKey((prev) => prev + 1);
@@ -53,7 +53,7 @@ export default function DocEditorPage() {
               draft: newDraft,
             });
             updateAgentState(ag.name, opinionState);
-            if (opinionState.type === "answering") {
+            if (opinionState.type === "answering" && opinionState.answer) {
               createCommentThread("", ag.name, opinionState.answer);
             }
           }
@@ -86,14 +86,14 @@ export default function DocEditorPage() {
       });
       updateAgentState(agentName, commentState);
 
-      if (commentState.type === "multipleComments") {
+      if (commentState.type === "multipleComments" && commentState.answers) {
         // Add each comment separately
         commentState.answers.forEach(({ author, content }) => {
           handleAddComment(selectionId, content, author);
         });
         return ""; // Return empty string as we've already added the comments
       } else if (commentState.type === "commenting") {
-        return commentState.answer;
+        return commentState.answer ?? "";
       }
       return "";
     } catch (err) {
@@ -128,7 +128,7 @@ export default function DocEditorPage() {
       updateAgentState(agentName, suggestionState);
 
       if (suggestionState.type === "suggesting") {
-        return suggestionState.answer;
+        return suggestionState.answer ?? "";
       }
       return "";
     } catch (err) {
