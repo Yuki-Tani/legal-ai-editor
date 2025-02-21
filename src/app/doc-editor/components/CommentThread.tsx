@@ -53,13 +53,18 @@ const CommentThread: React.FC<CommentThreadProps> = ({
   // AIのコメントを要求
   const commentAgents = agents.filter((ag) => ag.enableRequests.requestComment);
   const [selectedCommentAgent, setSelectedCommentAgent] = useState("");
+  // ButtonのisLoadingを管理
+  const [isLoading, setIsLoading] = useState(false);
+  
   const handleRequestComment = async () => {
     if (!selectedCommentAgent) return;
+    setIsLoading(true);
     const aiAnswer = await onRequestAgentComment(selectedCommentAgent);
     console.log("AIのコメント:", aiAnswer);
     if (aiAnswer) {
       onAddComment(aiAnswer, selectedCommentAgent);
     }
+    setIsLoading(false);
   };
 
   // 提案を要求
@@ -151,7 +156,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
           <Button
             onClick={handleRequestComment}
             disabled={!selectedCommentAgent}
-            useLoadingAnimation
+            isLoading={isLoading}
           >
             コメント要求
           </Button>
