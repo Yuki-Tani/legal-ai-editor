@@ -72,6 +72,8 @@ export class DraftAccessor
     }
     Transforms.deselect(this.editor);
   }
+
+  // ユーザーがエディタ上で選択している範囲を選択状態にする
   public applySelectionToExpandedRange(id?: string): void {
     const selection = this.editor.selection;
     this.applySelection(selection, id);

@@ -1,3 +1,7 @@
-.home-page {
-  background-color: #f0f0f0;
+.home {
+  padding: 16px;
+}
+
+.discussion {
+  padding: 0 16px;
 }
