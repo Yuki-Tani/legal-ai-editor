@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import styles from "./components.module.css";
+import styles from "./Button.module.css";
 
 type ButtonProps = {
   children: React.ReactNode;
@@ -39,15 +39,13 @@ const Button: React.FC<ButtonProps> = ({children, onClick, disabled, onlyOnce, u
   };
 
   return (
-    <div className={styles.chatbox_button}>
-      <button
-        onClick={() => handleClicked()}
-        className={styles.btn_border}
-        disabled={disabled || innerDisabled}
-      >
-        {(loading || isLoading) ? <Loading /> : children}
-      </button>
-    </div>
+    <button
+      onClick={() => handleClicked()}
+      className={styles.btn_border}
+      disabled={disabled || innerDisabled}
+    >
+      {(loading || isLoading) ? <Loading /> : children}
+    </button>
   );
 };
 

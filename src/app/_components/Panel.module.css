@@ -1,0 +1,60 @@
+
+.panel {
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  padding: 4px 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.panel:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+.header {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.header h3 {
+  flex: 1;
+  font-size: 1.1rem;
+  margin: 0;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.header .checkmark {
+  font-size: 1.5rem;
+  color: #4caf50;
+}
+.header button {
+  height: 2rem;
+  width: 2rem;
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.header button:hover {
+  background: #f0f0f0;
+}
+.header .chevron {
+  transition: transform 0.3s;
+}
+.header .chevron.closed {
+  transform: rotate(-90deg);
+}
+.header .chevron.open {
+  transform: rotate(0);
+}
+
+.buttons {
+  padding: 8px 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

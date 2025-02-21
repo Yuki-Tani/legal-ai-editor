@@ -1,0 +1,16 @@
+.frame {
+  display: flex;
+  gap: 0.5rem;
+}
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+.message {
+  font-size: 1rem;
+}

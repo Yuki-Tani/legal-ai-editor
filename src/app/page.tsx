@@ -1,24 +1,37 @@
-import Link from "next/link";
+'use client'
+import { DraftContext } from "./_components/DraftContext";
+import DraftEditor from "./_components/DraftEditor";
 import styles from "./page.module.css";
-import NagurigakiView from "./NagurigakiView";
+import IdeaInterviewPanel from "./_components/IdeaInterviewPanel";
+import { useState } from "react";
 
 export default function Home() {
   return (
-    <div className={styles.homePage}>
-      <h2>HOME</h2>
-      <Link href="/doc-editor"> ドキュメントエディタへ </Link>
-      <br />
-      <Link href="/sample"> サンプルページへ </Link>
-      <br />
-      <Link href="/interaction">インタラクションのテスト</Link> 
+    <div className={styles.home}>
+      <DraftContext>
+        <div style={{ display: "flex" }}>
+          <Content />
+          <Discussion />
+        </div>
+      </DraftContext>
+    </div>
+  );
+}
 
-      <br />
-      <Link href="/hearing"> ドラフト作成ヒアリングページへ </Link>
+export function Content() {
+  return (
+    <div className={styles.content} style={{ flex: 3 }}>
+      <DraftEditor style={{ minHeight: '90vh' }}/>
+    </div>
+  );
+}
 
-      <br />
-      <Link href="/sample/components"> コンポーネントのサンプルページへ </Link>
+export function Discussion() {
+  const [isOpen, setIsOpen] = useState(true);
 
-      <NagurigakiView />
+  return (
+    <div className={styles.discussion} style={{ flex: 2 }}>
+      <IdeaInterviewPanel isOpen={isOpen} setIsOpen={setIsOpen} />
     </div>
   );
 }

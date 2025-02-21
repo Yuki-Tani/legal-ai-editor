@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Provider from "./provider";
+import styles from "./layout.module.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <Provider>
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
-          <header>
+          <header className={styles.header}>
             <h1>法律文書 AI エディター</h1>
           </header>
           <main>{children}</main>

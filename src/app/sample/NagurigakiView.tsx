@@ -1,9 +1,9 @@
 'use client'
 
 import { startTransition, useActionState, useState, useTransition } from "react";
-import { SearchAndGetTextAction } from "./api/_egov/HoureiApi";
-import { RequestAction as ReqeustActionToYesman } from "./api/_agent/Yesman";
-import { initalAgentState } from "./api/_agent/types";
+import { SearchAndGetTextAction } from "@/api/_egov/HoureiApi";
+import { RequestAction as ReqeustActionToYesman } from "@/api/_agent/Yesman";
+import { initalAgentState } from "@/api/_agent/types";
 
 export default function NagurigakiView() {
   const [draft, setDraft] = useState("");

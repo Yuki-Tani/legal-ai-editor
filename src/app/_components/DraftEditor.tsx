@@ -1,6 +1,6 @@
 'use client'
 
-import { JSX, useEffect, useRef, useState } from "react"
+import { CSSProperties, JSX, useEffect, useRef, useState } from "react"
 import { BaseEditor } from "slate"
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps } from "slate-react"
 import { DraftElement, DraftText } from "../_types/Draft"
@@ -9,13 +9,14 @@ import { useDraftContext } from "./DraftContext"
 
 type DraftEditorProps = {
   renderExtensions?: (props: DraftEditorExtensionProps) => JSX.Element
+  style?: CSSProperties,
 }
 
 type DraftEditorExtensionProps = {
-  isEditorFocused: boolean
+  isEditorFocused: boolean,
 }
 
-export default function DraftEditor({renderExtensions}: DraftEditorProps): JSX.Element {
+export default function DraftEditor({renderExtensions, style}: DraftEditorProps): JSX.Element {
   const [draft,] = useDraftContext();
   const ref = useRef<HTMLDivElement>(null);
   const isFocused = useDraftEditorFocus(ref);
@@ -39,6 +40,7 @@ export default function DraftEditor({renderExtensions}: DraftEditorProps): JSX.E
             console.log(draft);
           }
         }}
+        style={style}
       />
       {renderExtensions && renderExtensions({ isEditorFocused: isFocused })}
     </div>

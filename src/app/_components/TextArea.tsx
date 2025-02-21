@@ -1,18 +1,19 @@
 "use client";
 
 import React from "react";
-import styles from "./components.module.css";
+import styles from "./TextArea.module.css";
 
 type TextAreaProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   label?: string;
+  style?: React.CSSProperties;
 };
 
-export default function TextArea({value, onChange, placeholder, label} : TextAreaProps) {
+export default function TextArea({value, onChange, placeholder, label, style} : TextAreaProps) {
   return (
-    <div className={styles.textarea}>
+    <div className={styles.textarea} style={style}>
       <label htmlFor="FlexTextarea">{label}</label>
       <div className={styles.FlexTextarea}>
         <div className={styles.FlexTextarea__dummy} aria-hidden="true"></div>
