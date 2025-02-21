@@ -6,6 +6,7 @@ import { RequestAction as RequestActionKeihinJireiAI } from "../api/_agent/Keihi
 import { RequestAction as RequestActionPublicCommentAI } from "../api/_agent/PublicCommentAI";
 import { RequestAction as RequestActionKinouseiHyoujiSyokuhinAI } from "../api/_agent/KinouseiHyoujiSyokuhinAI";
 import { RequestAction as RequestActionTokuteiSyotorihikiJireiAI} from "../api/_agent/TokuteiSyotorihikiJireiAI";
+import { RequestAction as RequestActionResearchAI } from "../api/_agent/ResearchAI";
 import { AgentRequestType, AgentState } from "../api/_agent/types";
 
 export interface AgentConfig {
@@ -91,6 +92,18 @@ export const defaultAgents: AgentConfig[] = [
   {
     name: "特定商取引違反執行事例AI",
     requestAction: RequestActionTokuteiSyotorihikiJireiAI,
+    enableRequests: {
+      requestDraft: false,
+      requestOpinion: false,
+      requestComment: true,
+      requestSuggestion: false,
+      requestIdeaRequirement: false,
+    },
+    state: initalAgentState,
+  },
+  {
+    name: "WebリサーチAI",
+    requestAction: RequestActionResearchAI,
     enableRequests: {
       requestDraft: false,
       requestOpinion: false,

@@ -4,6 +4,8 @@ import json
 import openai
 from openai import OpenAI
 from prompt import PromptEngine
+from google import genai
+import logging
 
 app = Flask(__name__)
 
@@ -30,6 +32,8 @@ CATEGORIES = [
 openai_api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = openai_api_key
 client = OpenAI()
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+genai_client = genai.Client(http_options= {'api_version': 'v1alpha'}, api_key=gemini_api_key)
 
 def call_gpt_messages_4o(messages):
     response = client.chat.completions.create(
@@ -171,6 +175,30 @@ def get_tokutei_syoutorihiki_jirei_context_route():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     return jsonify({'context': context}), 200
+
+@app.route('/api/search_external_topic', methods=['POST'])
+def analyze_document():
+    search_tool = {'google_search': {}}
+    data = request.get_json()
+    document = data.get("text")
+    if not document:
+        return jsonify({"error": "テキストが提供されていません。"}), 400
+    prompt = f"""
+    以下の法律に関する文書から、法律や行政とは関係のないトピックを1つ以上抽出してください。
+    さらに、そのトピックに関する最も最新のニュース、関連企業、関連商品、専門情報をウェブ検索して、非常に詳しく要約してください。回答は要約のみにしてください。他の文字を含めないでください。
+    文書: {document}
+    """
+
+    try:
+        chat = genai_client.chats.create(model='gemini-2.0-flash-exp', config={'tools': [search_tool]})
+        response = chat.send_message(prompt)
+        result_text = ""
+        for part in response.candidates[0].content.parts:
+            
+            result_text += part.text
+        return jsonify({"result": result_text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
