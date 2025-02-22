@@ -1,7 +1,9 @@
 import Image from "next/image";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 export enum AgentIconType {
   Basic,
+  Manager,
 }
 
 const defaultIconSize = 36;
@@ -20,6 +22,12 @@ export default function AgentIcon({
     (agentIconType === AgentIconType.Basic) ? "/icon-basic-ai.png" :
     /*default*/ "/icon-basic-ai.png"
   ;
+
+  if (agentIconType === AgentIconType.Manager) {
+    return (
+      <AccountCircleIcon />
+    )
+  }
 
   return (
     <Image src={src}

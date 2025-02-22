@@ -10,7 +10,7 @@ export default function AgentMessage({
   children: React.ReactNode,
   agentIconType: AgentIconType,
   agentName: string,
-  style?: React.CSSProperties
+  style?: React.CSSProperties,
 }) {
 
   return (
