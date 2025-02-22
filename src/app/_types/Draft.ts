@@ -1,4 +1,4 @@
-import { Editor, Selection, Text, Transforms, Range } from "slate"
+import { Editor, Selection, Text, Transforms, Range, isEmpty } from "slate"
 import { ReactEditor } from "slate-react";
 
 ////////////////////////////////////////
@@ -31,6 +31,14 @@ export class DraftAccessor
     private readonly editor: Editor
   )
   {}
+
+  public logString(): void {
+    console.log(Editor.string(this.editor, []));
+  }
+
+  public isDraftEmpty(): boolean {
+    return Editor.string(this.editor, []).trim() === '';
+  }
 
   public isRangeExpanded(): boolean {
     if (!this.editor.selection) { return false; }

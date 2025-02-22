@@ -11,6 +11,7 @@
   background: white;
   border-radius: 3px;
   transition: 0.4s;
+  cursor: pointer;
 }
 
 .btn_border:hover {
@@ -20,8 +21,8 @@
 
 .btn_border:disabled {
   background: white;
-  color: #888888;
-  border: solid 2px #adadad;
+  color: rgb(210, 210, 210);
+  border: solid 2px rgb(210, 210, 210);
 }
 
 /** loading animation */

@@ -49,6 +49,7 @@ export default function IdeaInterviewPanel({
 
         const response = await CommonDraftWriterAction([], requestText);
         draftAccessor.replaceDraft(response);
+        setIsOpen(false);
       });
     }
   }
@@ -59,7 +60,7 @@ export default function IdeaInterviewPanel({
 
   return (
     <Panel
-      title="AI に最初のドラフトを作成させる"
+      title="ドラフトの作成"
       isOpen={isOpen} setIsOpen={setIsOpen}
       isComplete={isComplete}
     >
