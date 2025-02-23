@@ -1,14 +1,20 @@
 "use server";
 
 import OpenAI from "openai";
-import { AgentRequest, AgentState } from "./types";
+import { AgentRequest, AgentState, initalAgentState, AgentRequestType } from "./types";
+import { Discussion } from "@/types/Discussion";
+import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
 });
 
-const fallbackMessages = {
+const fallbackMessages: Record<AgentRequestType, string> = {
+  requestDraft: "ちょっとわかんないですね。",
   requestOpinion: "申し訳ありません。意見を生成できませんでした。",
+  requestComment: "あー、法律わかんないです。",
+  requestSuggestion: "えっと、無理ですね。",
+  requestIdeaRequirement: "うーん、わかんないですね",
 };
 
 async function getRoleList(draft: string): Promise<Array<{ role: string; description: string }>> {
@@ -94,52 +100,76 @@ async function getRoleOpinion(
   }
 }
 
+async function doRequestOpinionOrCommentPublic(
+  prevState: AgentState,
+  draft: string,
+  coreIdea: string
+): Promise<AgentState> {
+  const roles = await getRoleList(draft);
+  if (!roles || roles.length === 0) {
+    return {
+      type: "commenting",
+      answer: fallbackMessages.requestOpinion,
+      memory: prevState.memory,
+    };
+  }
+  const opinions = await Promise.all(
+    roles.map(async ({ role, description }) => {
+      const op = await getRoleOpinion(role, description, draft, coreIdea);
+      return { author: role, content: op };
+    })
+  );
+  return {
+    type: "multipleComments",
+    answers: opinions,
+    memory: prevState.memory,
+  };
+}
+
 export async function RequestAction(
   prevState: AgentState,
   request: AgentRequest
+): Promise<AgentState>;
+export async function RequestAction(
+  discussion: Discussion
+): Promise<AgentState>;
+
+export async function RequestAction(
+  arg1: AgentState | Discussion,
+  arg2?: AgentRequest
 ): Promise<AgentState> {
-  switch (request.type) {
-    case "requestOpinion":
-    case "requestComment": {
-      // 1. Get list of relevant roles
-      const roles = await getRoleList(request.draft);
-      if (roles.length === 0) {
-        return {
-          type: "commenting",
-          answer: fallbackMessages.requestOpinion,
-          memory: prevState.memory,
-        };
-      }
-
-      // 2. Get opinion from each role
-      const opinions = await Promise.all(
-        roles.map(async ({ role, description }) => {
-          const opinion = await getRoleOpinion(
-            role,
-            description,
-            request.draft,
-            request.coreIdea
-          );
-          return {
-            role,
-            opinion,
-          };
-        })
-      );
-      
-      // 3. Return array of comments
-      return {
-        type: "multipleComments",
-        answers: opinions.map(({ role, opinion }) => ({
-          author: role,
-          content: opinion,
-        })),
-        memory: prevState.memory,
-      };
+  if (arg2 !== undefined) {
+    const prevState = arg1 as AgentState;
+    const request = arg2;
+    if (request.type === "requestOpinion" || request.type === "requestComment") {
+      return await doRequestOpinionOrCommentPublic(prevState, request.draft, request.coreIdea);
     }
-
-    default: {
-      return prevState;
-    }
+    return arg1 as AgentState;
   }
+
+  const discussion = arg1 as Discussion;
+  const t = discussion.commentRequest?.type;
+  if (!t) {
+    return { type: "silent", answer: "PublicComment no commentRequest", memory: {} };
+  }
+  const mapped = mapCommentTypeToRequestType(t);
+  const draftStr = JSON.stringify(discussion.baseDraft);
+  const selectedText = getSelectedTextFromDiscussion(discussion, "PublicComment");
+  const prevState: AgentState = { ...initalAgentState };
+
+  if (mapped === "requestOpinion" || mapped === "requestComment") {
+    return await doRequestOpinionOrCommentPublic(prevState, draftStr, "");
+  } else if (mapped === "requestSuggestion") {
+    return {
+      type: "suggesting",
+      answer: "",
+      memory: {},
+    };
+  }
+
+  return {
+    type: "silent",
+    answer: "PublicComment fallback",
+    memory: {},
+  };
 }

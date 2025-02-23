@@ -1,7 +1,8 @@
 "use server";
 
-import { AgentRequest, AgentState, AgentRequestType } from "./types";
-import { Discussion } from "../../_types/Discussion";
+import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
+import { Discussion } from "@/types/Discussion";
+import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
 
 const fallbackMessages: Record<AgentRequestType, string> = {
   requestDraft: "ちょっとわかんないですね。",
@@ -23,7 +24,6 @@ async function callFlaskGeminiSearch(text: string): Promise<string> {
       throw new Error("Flask API から空のレスポンスが返されました");
     }
     let data;
-    console.log(responseText);
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
@@ -34,18 +34,34 @@ async function callFlaskGeminiSearch(text: string): Promise<string> {
       throw new Error(data.error || "Flask API エラー");
     }
 
-    return data.result;
+    return data.context;
   } catch (error) {
     console.error("Flask API 呼び出しエラー:", error);
     return "";
   }
 }
 
+async function doRequestCommentResearch(
+  prevState: AgentState,
+  selectedText: string,
+  draft: string
+): Promise<AgentState> {
+  const text = selectedText === "" ? draft : selectedText;
+  const searchResult = await callFlaskGeminiSearch(text);
+  return {
+    type: "commenting",
+    answer: searchResult,
+    memory: prevState.memory,
+  };
+}
+
 export async function RequestAction(
   prevState: AgentState,
   request: AgentRequest
 ): Promise<AgentState>;
-export async function RequestAction(discussion: Discussion): Promise<AgentState>;
+export async function RequestAction(
+  discussion: Discussion
+): Promise<AgentState>;
 
 export async function RequestAction(
   arg1: AgentState | Discussion,
@@ -53,49 +69,48 @@ export async function RequestAction(
 ): Promise<AgentState> {
   if (arg2 !== undefined) {
     const prevState = arg1 as AgentState;
-    const request = arg2 as AgentRequest;
-    switch (request.type) {
-      case "requestComment": {
-        const { selection, coreIdea, draft } = request;
-        const { text: selectedText } = selection;
-        const text = selectedText === "" ? draft : selectedText;
-        const searchResult = await callFlaskGeminiSearch(text);
-        console.log(searchResult);
-
-        return {
-          type: "commenting",
-          answer: searchResult,
-          memory: prevState.memory,
-        };
-      }
-      default: {
-        return {
-          ...prevState,
-          answer: fallbackMessages[request.type] ?? "不明なリクエストです。",
-        };
-      }
+    const request = arg2;
+    if (request.type === "requestComment") {
+      const { text: selectedText } = request.selection;
+      return await doRequestCommentResearch(prevState, selectedText, request.draft);
     }
+    return prevState;
   }
 
   const discussion = arg1 as Discussion;
-
-  if (discussion.commentRequest?.type === "discuss") {
-    const text = discussion.selectedRange
-      ? "選択範囲のテキスト"
-      : JSON.stringify(discussion.baseDraft);
-
-    const searchResult = await callFlaskGeminiSearch(text);
-
+  const ctype = discussion.commentRequest?.type;
+  if (!ctype) {
     return {
-      type: "commenting",
-      answer: searchResult,
+      type: "silent",
+      answer: "ResearchAI: discussion has no commentRequest",
+      memory: {},
+    };
+  }
+
+  const mapped = mapCommentTypeToRequestType(ctype);
+  const selectedText = getSelectedTextFromDiscussion(discussion, "ResearchAI");
+  const draftStr = JSON.stringify(discussion.baseDraft);
+  const prevState: AgentState = { ...initalAgentState };
+
+  if (mapped === "requestComment") {
+    return await doRequestCommentResearch(prevState, selectedText, draftStr);
+  } else if (mapped === "requestOpinion") {
+    return {
+      type: "answering",
+      answer: "",
+      memory: {},
+    };
+  } else if (mapped === "requestSuggestion") {
+    return {
+      type: "suggesting",
+      answer: "",
       memory: {},
     };
   }
 
   return {
-    type: "commenting",
-    answer: "特に何も検索しませんでした。",
+    type: "silent",
+    answer: "ResearchAI fallback(Discussion)",
     memory: {},
   };
 }

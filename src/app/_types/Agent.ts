@@ -19,6 +19,16 @@ export const AgentPool: Agent[] = [
     description: "広く浅い一般知識を持つエージェントです。法律の専門知識は持ちませんが、素早く返答を行うことができます。"
   },
   {
+    id: "hourei",
+    name: "法令の知識を AI",
+    description: "法令の条文について熟知しており、関連する具体的な法令を検索してその内容を踏まえて返答を行うことができます。"
+  },
+  {
+    id: "keihin-jirei",
+    name: "景品表示法違反事例 AI",
+    description: "景品表示法違反事例について専門的な知識をもつエージェントです。景品表示法違反事例について実際の事例を踏まえて返答を行うことができます。"
+  },
+  {
     id: "kinousei-hyouji-shokuhin",
     name: "機能性表示食品 AI",
     description: "機能性表示食品について専門的な知識をもつエージェントです。関連する機能性表示食品と機能性表示食品の実際の届出内容を踏まえて返答を行うことができます。"
@@ -32,6 +42,11 @@ export const AgentPool: Agent[] = [
     id: "web-research",
     name: "Web 検索 AI",
     description: "Web 検索を行うことができるエージェントです。最新のニュースなどを検索できる強みがあります。"
+  },
+  {
+    id: "public-comment",
+    name: "パブリックコメント AI",
+    description: "関連する役割からのパブリックコメントを予想して返答を行うことができるエージェントです。"
   },
 ]
 
