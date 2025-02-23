@@ -24,12 +24,8 @@ export type DraftSelection = Selection;
 
 export const emptyDraft: Draft = [{ type: 'paragraph', children: [{ text: '' }] }];
 
-export class DraftAccessor
-{
-  constructor(
-    private readonly editor: Editor
-  )
-  {}
+export class DraftAccessor {
+  constructor(public readonly editor: Editor) {}
 
   public logString(): void {
     console.log(Editor.string(this.editor, []));
@@ -40,13 +36,20 @@ export class DraftAccessor
   }
 
   public isRangeExpanded(): boolean {
-    if (!this.editor.selection) { return false; }
-    return !!this.editor.selection && Range.isExpanded(this.editor.selection);
+    if (!this.editor.selection) return false;
+    return Range.isExpanded(this.editor.selection);
+  }
+
+  public getCurrentRange(): Range | null {
+    if (!this.editor.selection) {
+      return null;
+    }
+    return this.editor.selection;
   }
 
   public getAnchorCursorForLayout(): DOMRect | undefined {
     const selection = this.editor.selection;
-    if (!selection) { return undefined; }
+    if (!selection) return undefined;
     const anchorRange = ReactEditor.toDOMRange(this.editor, {
       anchor: selection.anchor,
       focus: selection.anchor,
@@ -56,7 +59,7 @@ export class DraftAccessor
 
   public getFocusCursorForLayout(): DOMRect | undefined {
     const selection = this.editor.selection;
-    if (!selection) { return undefined; }
+    if (!selection) return undefined;
     const focusRange = ReactEditor.toDOMRange(this.editor, {
       anchor: selection.focus,
       focus: selection.focus,
@@ -70,7 +73,8 @@ export class DraftAccessor
   }
 
   public applySelection(selection: DraftSelection, id?: string): void {
-    if (!selection) { return; }
+    if (!selection) return;
+
     Transforms.setSelection(this.editor, selection);
     this.editor.addMark("selected", true);
 
@@ -86,21 +90,11 @@ export class DraftAccessor
         }
       }
     }
-
-    Transforms.deselect(this.editor);
   }
 
-  // ユーザーがエディタ上で選択している範囲を選択状態にする
   public applySelectionToExpandedRange(id?: string): void {
     const selection = this.editor.selection;
     if (!selection) return;
     this.applySelection(selection, id);
-  }
-
-  public getSelectedText(): string {
-    if (!this.editor.selection) {
-      return "";
-    }
-    return Editor.string(this.editor, this.editor.selection);
   }
 }

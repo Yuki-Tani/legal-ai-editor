@@ -1,3 +1,4 @@
+import { Range } from "slate";
 import { Agent } from "./Agent";
 import { Draft } from "./Draft";
 
@@ -25,4 +26,5 @@ export type Discussion = {
   commentRequest: CommentRequest | null,
   isCompleted?: boolean,
   isActive?: boolean,
+  selectedRange?: Range,
 }
