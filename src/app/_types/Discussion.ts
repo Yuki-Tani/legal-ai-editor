@@ -26,5 +26,6 @@ export type Discussion = {
   commentRequest: CommentRequest | null,
   isCompleted?: boolean,
   isActive?: boolean,
+  selectedText?: string,
   selectedRange?: Range,
 }

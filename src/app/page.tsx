@@ -75,9 +75,10 @@ function HomeContainer() {
         commentRequest: {
           id: `comment-${discussions.length + index}-0`,
           agent,
-          type: "pointout"
+          type: "discuss",
         },
         isActive: index === 0,
+        selectedText: draftAccessor.getSelectedText(),
         selectedRange: range,
       }));
       setDiscussions(prev => [...prev, ...newDiscussions]);

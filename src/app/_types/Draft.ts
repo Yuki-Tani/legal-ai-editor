@@ -97,4 +97,24 @@ export class DraftAccessor {
     if (!selection) return;
     this.applySelection(selection, id);
   }
+
+  public getTextInRange(range: Range): string {
+    try {
+      return Editor.string(this.editor, range);
+    } catch (error) {
+      console.error("Failed to get text in range:", error);
+      return "";
+    }
+  }
+
+  public getSelectedText(): string {
+    const range = this.getCurrentRange();
+    if (!range) return "";
+    try {
+      return Editor.string(this.editor, range);
+    } catch (error) {
+      console.error("Failed to get selected text:", error);
+      return "";
+    }
+  }
 }

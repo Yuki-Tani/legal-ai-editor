@@ -3,7 +3,7 @@
 import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
 import { Discussion } from "@/types/Discussion";
 import OpenAI from "openai";
-import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
+import { mapCommentTypeToRequestType } from "./AICommon";
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
@@ -117,7 +117,7 @@ export async function RequestAction(
   }
 
   const mapped = mapCommentTypeToRequestType(ctype);
-  const selectedText = getSelectedTextFromDiscussion(discussion, "KeihinJireAI");
+  const selectedText = discussion.selectedText || "";
   const draftStr = JSON.stringify(discussion.baseDraft);
   const prevState: AgentState = { ...initalAgentState };
 

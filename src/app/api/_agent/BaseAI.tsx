@@ -3,7 +3,7 @@
 import OpenAI from "openai";
 import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
 import { Discussion } from "@/types/Discussion";
-import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
+import { mapCommentTypeToRequestType } from "./AICommon";
 import { ResponseFormatJSONSchema } from "openai/src/resources/index.js";
 import { requirement_list_schema } from "./BaseAISchema";
 
@@ -240,7 +240,7 @@ export async function RequestAction(
   }
 
   const mappedType = mapCommentTypeToRequestType(commentReq.type);
-  const selectedText = getSelectedTextFromDiscussion(discussion, "BaseAI");
+  const selectedText = discussion.selectedText || "";
   const draftString = JSON.stringify(discussion.baseDraft);
   const prevState: AgentState = { ...initalAgentState };
 
