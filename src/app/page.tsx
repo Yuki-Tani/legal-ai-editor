@@ -9,6 +9,7 @@ import { AgentPickerAction } from "./api/_agent/AgentPicker";
 import { AgentPoolWithoutManager } from "./_types/Agent";
 import { Discussion } from "./_types/Discussion";
 import DiscussionPanel from "./_components/DiscussionPanel";
+import { DraftEditorFocusedRangePopup } from "./_components/DraftEditorPopup";
 
 export default function Home() {
   return (
@@ -24,9 +25,38 @@ export default function Home() {
 }
 
 export function Content() {
+  function handleStartDiscussion(selectedText: string) {
+    if (!selectedText || selectedText.trim().length === 0) {
+      console.log("選択テキストが空です");
+      return;
+    }
+    console.log("議論を始める:", selectedText);
+    // TODO: ここで Discussion を新規作成、AgentPickerAction を呼ぶなどの実装
+  }
+
   return (
     <div className={styles.content} style={{ flex: 3 }}>
-      <DraftEditor style={{ minHeight: '90vh' }}/>
+      {/* ▼ renderExtensions を指定して、DraftEditorFocusedRangePopup を利用 */}
+      <DraftEditor
+        style={{ minHeight: '90vh' }}
+        renderExtensions={({ isEditorFocused, draftAccessor }) => (
+          <DraftEditorFocusedRangePopup
+            isEditorFocused={isEditorFocused}
+            style={{ margin: 6, backgroundColor: "white", border: "1px solid black" }}
+          >
+            <div>
+              <button
+                onClick={() => {
+                  draftAccessor.applySelectionToExpandedRange();
+                  handleStartDiscussion(draftAccessor.getSelectedText());
+                }}
+              >
+                議論を始める
+              </button>
+            </div>
+          </DraftEditorFocusedRangePopup>
+        )}
+      />
     </div>
   );
 }

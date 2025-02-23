@@ -14,10 +14,11 @@ type DraftEditorProps = {
 
 type DraftEditorExtensionProps = {
   isEditorFocused: boolean,
+  draftAccessor: ReturnType<typeof useDraftContext>[1],
 }
 
 export default function DraftEditor({renderExtensions, style}: DraftEditorProps): JSX.Element {
-  const [draft,] = useDraftContext();
+  const [draft, draftAccessor] = useDraftContext();
   const ref = useRef<HTMLDivElement>(null);
   const isFocused = useDraftEditorFocus(ref);
 
@@ -42,7 +43,8 @@ export default function DraftEditor({renderExtensions, style}: DraftEditorProps)
         }}
         style={style}
       />
-      {renderExtensions && renderExtensions({ isEditorFocused: isFocused })}
+      {/* ▼ draftAccessor も一緒に引き渡す */}
+      {renderExtensions && renderExtensions({ isEditorFocused: isFocused, draftAccessor })}
     </div>
   )
 }
