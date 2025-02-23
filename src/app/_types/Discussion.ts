@@ -28,4 +28,5 @@ export type Discussion = {
   isActive?: boolean,
   selectedText?: string,
   selectedRange?: Range,
+  requirements?: string[],
 }

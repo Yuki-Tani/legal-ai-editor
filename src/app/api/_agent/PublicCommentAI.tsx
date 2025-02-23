@@ -158,7 +158,8 @@ export async function RequestAction(
   const prevState: AgentState = { ...initalAgentState };
 
   if (mapped === "requestOpinion" || mapped === "requestComment") {
-    return await doRequestOpinionOrCommentPublic(prevState, draftStr, "");
+    const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+    return await doRequestOpinionOrCommentPublic(prevState, draftStr, coreIdea);
   } else if (mapped === "requestSuggestion") {
     return {
       type: "suggesting",

@@ -69,11 +69,13 @@ async function doRequestCommentKinousei(
   prevState: AgentState,
   selectedText: string,
   draft: string,
+  coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
   const searchResults = await callFlaskGetContext(selectedText || draft);
   console.log(searchResults);
-  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する機能性食品、ユーザとのやりとりが与えられます。以下の機能性食品からユーザーの文章と関連するものを１つ以上引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した機能性食品を詳細で具体的に説明した文章を含むコメントのみを返信してください。\n\n文章；${selectedText}\n\n機能性食品：${searchResults}`;
+  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する機能性食品、ユーザとのやりとりが与えられます。以下の機能性食品からユーザーの文章と関連するものを１つ以上引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した機能性食品を詳細で具体的に説明した文章を含むコメントのみを返信してください。
+  アイデアと要件；${coreIdea}\n\n文章；${selectedText}\n\n機能性食品：${searchResults}`;
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemMessage },
@@ -112,7 +114,8 @@ export async function RequestAction(
     if (request.type === "requestComment") {
       const { text: selectedText, comments } = request.selection;
       const draft = request.draft;
-      return await doRequestCommentKinousei(prevState, selectedText, draft, comments || []);
+      const coreIdea = request.coreIdea;
+      return await doRequestCommentKinousei(prevState, selectedText, draft, coreIdea, comments || []);
     }
     return arg1 as AgentState;
   }
@@ -133,7 +136,9 @@ export async function RequestAction(
   const prevState: AgentState = { ...initalAgentState };
 
   if (mapped === "requestComment") {
-    return await doRequestCommentKinousei(prevState, selectedText, draftStr, []);
+    const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+    const comments = discussion.comments.map((c) => ({ author: c.agent.id === "manager" ? "user" : "assistant", content: c.message }));
+    return await doRequestCommentKinousei(prevState, selectedText, draftStr, coreIdea, comments);
   } else if (mapped === "requestOpinion") {
     return {
       type: "answering",

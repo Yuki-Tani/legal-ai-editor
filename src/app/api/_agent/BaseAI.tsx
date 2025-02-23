@@ -243,19 +243,23 @@ export async function RequestAction(
   const selectedText = discussion.selectedText || "";
   const draftString = JSON.stringify(discussion.baseDraft);
   const prevState: AgentState = { ...initalAgentState };
+  const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+  // discussion.commentsからcomments: Array<{ author: string; content: string }>を取得する・
+  // authorはdiscussion.comment.agent.idがmanagerの場合は"user"、それ以外は"assistant"とする
+  const comments = discussion.comments.map((c) => ({ author: c.agent.id === "manager" ? "user" : "assistant", content: c.message }));
 
   switch (mappedType) {
     case "requestDraft":
-      return await doRequestDraft("", prevState);
+      return await doRequestDraft(coreIdea, prevState);
 
     case "requestOpinion":
-      return await doRequestOpinion("", draftString, prevState);
+      return await doRequestOpinion(coreIdea, draftString, prevState);
 
     case "requestComment":
-      return await doRequestComment("", draftString, selectedText, [], prevState);
+      return await doRequestComment(coreIdea, draftString, selectedText, comments, prevState);
 
     case "requestSuggestion":
-      return await doRequestSuggestion("", draftString, selectedText, prevState);
+      return await doRequestSuggestion(coreIdea, draftString, selectedText, prevState);
 
     case "requestIdeaRequirement":
       return await doRequestIdeaRequirement("", "", prevState);

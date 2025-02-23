@@ -14,9 +14,11 @@ import Panel from "./Panel";
 export default function IdeaInterviewPanel({
   isOpen,
   setIsOpen,
+  onInterviewComplete,
 } : {
   isOpen: boolean,
   setIsOpen: (isOpen: boolean) => void,
+  onInterviewComplete?: (requirements: string[]) => void,
 }) {
   const [draftKind, setDraftKind] = useState("");
   const [isInterviewPending, startInterviewTransition] = useTransition();
@@ -57,6 +59,10 @@ export default function IdeaInterviewPanel({
   const isRequirementsComplete = requirements.length > 0;
   const isUserComplete = (isRequirementsComplete && answers.length == requirements.length);
   const isComplete = isUserComplete && !isCreatingDraftPending;
+
+  if (isComplete && onInterviewComplete) {
+    onInterviewComplete(requirements);
+  }
 
   return (
     <Panel

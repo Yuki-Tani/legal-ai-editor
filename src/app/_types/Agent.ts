@@ -20,7 +20,7 @@ export const AgentPool: Agent[] = [
   },
   {
     id: "hourei",
-    name: "法令の知識を AI",
+    name: "法令 AI",
     description: "法令の条文について熟知しており、関連する具体的な法令を検索してその内容を踏まえて返答を行うことができます。"
   },
   {
@@ -46,7 +46,7 @@ export const AgentPool: Agent[] = [
   {
     id: "public-comment",
     name: "パブリックコメント AI",
-    description: "関連する役割からのパブリックコメントを予想して返答を行うことができるエージェントです。"
+    description: "関連する企業や個人からのパブリックコメントを予想して返答を行うことができるエージェントです。"
   },
 ]
 

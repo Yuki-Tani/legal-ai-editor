@@ -26,8 +26,14 @@ function HomeContainer() {
   const [draft, draftAccessor] = useDraftContext();
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [isPickAgentPending, startPickAgentTransition] = useTransition();
+  const [interviewRequirements, setInterviewRequirements] = useState<string[]>([]);
 
-  async function handleGatherOpinion() {
+  async function handleIdeaInterviewComplete(requirements: string[]) {
+    setInterviewRequirements(requirements);
+    handleGatherOpinion(requirements);
+  }
+
+  async function handleGatherOpinion(requirements: string[]) {
     startPickAgentTransition(async () => {
       const response = await AgentPickerAction({
         request: "文書の性質を考慮して、作成中の文書の問題点を的確に指摘できる可能性の高いエージェントを複数選択せよ。",
@@ -46,6 +52,7 @@ function HomeContainer() {
           type: "pointout",
         },
         isActive: index === 0,
+        requirements, 
       }));
 
       setDiscussions((prev) => [...prev, ...newDiscussions]);
@@ -80,6 +87,7 @@ function HomeContainer() {
         isActive: index === 0,
         selectedText: draftAccessor.getSelectedText(),
         selectedRange: range,
+        requirements: interviewRequirements,
       }));
       setDiscussions(prev => [...prev, ...newDiscussions]);
     });
@@ -97,7 +105,7 @@ function HomeContainer() {
       <DiscussionArea
         discussions={discussions}
         setDiscussion={handleSetDiscussion}
-        handleGatherOpinion={handleGatherOpinion}
+        handleIdeaInterviewComplete={handleIdeaInterviewComplete}
         isPickAgentPending={isPickAgentPending}
       />
     </div>
@@ -128,7 +136,6 @@ function Content({
             <div>
               <button
                 onClick={() => {
-                  // ボタン押下で handleStartDiscussion
                   onStartDiscussion();
                 }}
               >
@@ -147,28 +154,23 @@ function Content({
 export function DiscussionArea({
   discussions,
   setDiscussion,
-  handleGatherOpinion,
-  isPickAgentPending,
+  handleIdeaInterviewComplete,
+  isPickAgentPending
 }: {
   discussions: Discussion[];
   setDiscussion: (discussion: Discussion) => void;
-  handleGatherOpinion: () => void;
+  handleIdeaInterviewComplete: (requirements: string[]) => void;
   isPickAgentPending: boolean;
 }) {
-  const [draft, draftAccessor] = useDraftContext();
   const [isOpen, setIsOpen] = useState(true);
 
   return (
     <div className={styles.discussion} style={{ flex: 2 }}>
-      <Button
-        onClick={handleGatherOpinion}
-        disabled={draftAccessor.isDraftEmpty()}
-        isLoading={isPickAgentPending}
-      >
-        様々な AI に意見を募る
-      </Button>
-
-      <IdeaInterviewPanel isOpen={isOpen} setIsOpen={setIsOpen} />
+      <IdeaInterviewPanel 
+        isOpen={isOpen} 
+        setIsOpen={setIsOpen}
+        onInterviewComplete={handleIdeaInterviewComplete}
+      />
 
       {discussions.map((discussion) => (
         <DiscussionPanel
