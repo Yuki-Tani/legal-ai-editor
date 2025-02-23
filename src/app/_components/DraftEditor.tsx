@@ -6,6 +6,7 @@ import { Editable, ReactEditor, RenderElementProps, RenderLeafProps } from "slat
 import { DraftElement, DraftText } from "../_types/Draft"
 import styles from "./DraftEditor.module.css"
 import { useDraftContext } from "./DraftContext"
+import { DraftEditorFocusedRangePopup } from "./DraftEditorPopup";
 
 type DraftEditorProps = {
   renderExtensions?: (props: DraftEditorExtensionProps) => JSX.Element
@@ -14,27 +15,28 @@ type DraftEditorProps = {
 
 type DraftEditorExtensionProps = {
   isEditorFocused: boolean,
+  draftAccessor: ReturnType<typeof useDraftContext>[1],
 }
 
 export default function DraftEditor({renderExtensions, style}: DraftEditorProps): JSX.Element {
-  const [draft,] = useDraftContext();
-  const ref = useRef<HTMLDivElement>(null);
-  const isFocused = useDraftEditorFocus(ref);
+  const [draft, draftAccessor] = useDraftContext();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isEditorFocused = useEditorFocus(containerRef);
 
   useEffect(() => {
-    if (!isFocused) {
+    if (!isEditorFocused) {
       window.getSelection()?.removeAllRanges();
     }
-  }, [isFocused]);
+  }, [isEditorFocused]);
 
   return (
-    <div ref={ref}>
+    <div ref={containerRef}>
       <Editable
         className={styles.editor}
         renderElement={renderElement}
-        renderLeaf={renderLeaf}
+        renderLeaf={renderLeaf} 
         onKeyDown={(event) => {
-          // Ctrl + D : デバッグ用に現在のドラフトをコンソールに出力
+          // Ctrl + D : デバッグ
           if (event.ctrlKey && event.key === "d") {
             event.preventDefault();
             console.log(draft);
@@ -42,37 +44,35 @@ export default function DraftEditor({renderExtensions, style}: DraftEditorProps)
         }}
         style={style}
       />
-      {renderExtensions && renderExtensions({ isEditorFocused: isFocused })}
+      {renderExtensions && renderExtensions({
+        isEditorFocused,
+        draftAccessor
+      })}
     </div>
-  )
+  );
 }
 
-function useDraftEditorFocus(ref: React.RefObject<HTMLElement | null>): boolean {
-  const [isFocused, setIsFocused] = useState(false);
+function useEditorFocus(ref: React.RefObject<HTMLElement | null>): boolean {
+  const [focused, setFocused] = useState(false);
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const handleFocusIn = () => {
-      setIsFocused(true);
-    }
-    const handleFocusOut = (e: FocusEvent) => {
-      if (!e.relatedTarget || !element.contains(e.relatedTarget as HTMLElement)) {
-        setIsFocused(false);
+    const el = ref.current;
+    if (!el) return;
+    const onFocusIn = () => setFocused(true);
+    const onFocusOut = (e: FocusEvent) => {
+      if (!e.relatedTarget || !el.contains(e.relatedTarget as HTMLElement)) {
+        setFocused(false);
       }
-    }
-
-    element.addEventListener("focusin", handleFocusIn);
-    element.addEventListener("focusout", handleFocusOut);
-
+    };
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
     return () => {
-      element.removeEventListener("focusin", handleFocusIn);
-      element.removeEventListener("focusout", handleFocusOut);
+      el.removeEventListener("focusin", onFocusIn);
+      el.removeEventListener("focusout", onFocusOut);
     };
   }, [ref]);
 
-  return isFocused;
+  return focused;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,61 +88,36 @@ declare module 'slate' {
 function renderElement(props: RenderElementProps): JSX.Element {
   switch (props.element.type) {
     case "paragraph":
-      return <DraftElementParagraph {...props} />;
+      return (
+        <p {...props.attributes} className={styles.paragraph}>
+          {props.children}
+        </p>
+      );
     case "heading":
-      return <DraftElementHeading {...props} />;
+      return (
+        <h2 {...props.attributes} className={styles.heading}>
+          {props.children}
+        </h2>
+      );
     default:
-      return <></>;
+      return <span {...props.attributes}>{props.children}</span>;
   }
 }
 
 function renderLeaf(props: RenderLeafProps): JSX.Element {
-  return (
-    <>
-      <span
-        className={[
-          ("selected" in props.leaf ? styles.selected : ""),
-          ("suggested" in props.leaf ? styles.suggested : ""),
-        ].join(" ")}
-        {...props.attributes}
-      >
-          {props.children}
-      </span>
-      {("suggested" in props.leaf) &&
-        <span
-          className={[
-            ("selected" in props.leaf ? styles.selected : ""),
-            styles.suggestion,
-          ].join(" ")}
-        >
-          {props.leaf.suggestion}
-        </span>
-      }
-    </>
-  );
-}
+  const { attributes, children, leaf } = props;
 
-function DraftElementParagraph(props: RenderElementProps): JSX.Element {
-  if (props.element.type != "paragraph") return <></>;
-  return <p className={styles.paragraph} {...props.attributes}>{props.children}</p>;
-}
-
-function DraftElementHeading(props: RenderElementProps): JSX.Element {
-  if (props.element.type != "heading") return <></>;
-  switch(props.element.level) {
-    case 1:
-      return <h1 className={styles.heading} {...props.attributes}>{props.children}</h1>;
-    case 2:
-      return <h2 className={styles.heading} {...props.attributes}>{props.children}</h2>;
-    case 3:
-      return <h3 className={styles.heading} {...props.attributes}>{props.children}</h3>;
-    case 4:
-      return <h4 className={styles.heading} {...props.attributes}>{props.children}</h4>;
-    case 5:
-      return <h5 className={styles.heading} {...props.attributes}>{props.children}</h5>;
-    case 6:
-      return <h6 className={styles.heading} {...props.attributes}>{props.children}</h6>;
-    default:
-      return <h6 className={styles.heading} {...props.attributes}>{props.children}</h6>;
+  let className = "";
+  if ("selected" in leaf) {
+    className += styles.selected + " ";
   }
+  if ("suggested" in leaf) {
+    className += styles.suggested + " ";
+  }
+
+  return (
+    <span {...attributes} className={className}>
+      {children}
+    </span>
+  );
 }

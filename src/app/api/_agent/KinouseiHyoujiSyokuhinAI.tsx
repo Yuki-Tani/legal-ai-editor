@@ -1,7 +1,9 @@
 "use server";
 
-import { AgentRequest, AgentState, AgentRequestType } from "./types";
+import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
+import { Discussion } from "@/types/Discussion";
 import OpenAI from "openai";
+import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
@@ -17,17 +19,19 @@ const fallbackMessages: Record<AgentRequestType, string> = {
 
 async function callFlaskGetContext(question: string): Promise<string> {
   try {
-    const response = await fetch("http://127.0.0.1:5000/api/get_kinousei_hyouji_syokuhin_context", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
+    const response = await fetch(
+      "http://127.0.0.1:5000/api/get_kinousei_hyouji_syokuhin_context",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      }
+    );
     const responseText = await response.text();
     if (!responseText) {
       throw new Error("Flask API から空のレスポンスが返されました");
     }
     let data;
-    console.log(responseText);
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
@@ -61,42 +65,92 @@ async function getChatCompletion(
   }
 }
 
+async function doRequestCommentKinousei(
+  prevState: AgentState,
+  selectedText: string,
+  draft: string,
+  comments: Array<{ author: string; content: string }>
+): Promise<AgentState> {
+  const searchResults = await callFlaskGetContext(selectedText || draft);
+  console.log(searchResults);
+  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する機能性食品、ユーザとのやりとりが与えられます。以下の機能性食品からユーザーの文章と関連するものを１つ以上引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した機能性食品を詳細で具体的に説明した文章を含むコメントのみを返信してください。\n\n文章；${selectedText}\n\n機能性食品：${searchResults}`;
+
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    { role: "system", content: systemMessage },
+  ];
+  comments.forEach((c) => {
+    messages.push({
+      role: c.author === "user" ? "user" : "assistant",
+      content: c.content,
+    });
+  });
+
+  const commentAnswer = await getChatCompletion(
+    messages,
+    fallbackMessages.requestComment
+  );
+  return {
+    type: "commenting",
+    answer: commentAnswer,
+    memory: prevState.memory,
+  };
+}
+
 export async function RequestAction(
   prevState: AgentState,
   request: AgentRequest
+): Promise<AgentState>;
+export async function RequestAction(discussion: Discussion): Promise<AgentState>;
+
+export async function RequestAction(
+  arg1: AgentState | Discussion,
+  arg2?: AgentRequest
 ): Promise<AgentState> {
-  switch (request.type) {
-    case "requestComment": {
-      const { selection, coreIdea, draft } = request;
-      const { text: selectedText, comments } = selection;
-      const text = selectedText === "" ? draft : selectedText;
-      const searchResults = await callFlaskGetContext(text);
-      console.log(searchResults);
-      const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する機能性食品、ユーザとのやりとりが与えられます。以下の機能性食品からユーザーの文章と関連するものを１つ以上引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した機能性食品を詳細で具体的に説明した文章を含むコメントのみを返信してください。\n\nアイデアと要件:\n${coreIdea}\n\n文章；${selectedText}\n\n機能性食品：${searchResults}`;
-
-      const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-        { role: "system", content: systemMessage },
-      ];
-      comments.forEach((comment) => {
-        messages.push({
-          role: comment.author === "user" ? "user" : "assistant",
-          content: comment.content,
-        });
-      });
-
-      const commentAnswer = await getChatCompletion(
-        messages,
-        fallbackMessages.requestComment
-      );
-      return {
-        type: "commenting",
-        answer: commentAnswer,
-        memory: prevState.memory,
-      };
+  if (arg2 !== undefined) {
+    const prevState = arg1 as AgentState;
+    const request = arg2;
+    if (request.type === "requestComment") {
+      const { text: selectedText, comments } = request.selection;
+      const draft = request.draft;
+      return await doRequestCommentKinousei(prevState, selectedText, draft, comments || []);
     }
-
-    default: {
-      return prevState;
-    }
+    return arg1 as AgentState;
   }
+
+  const discussion = arg1 as Discussion;
+  const ctype = discussion.commentRequest?.type;
+  if (!ctype) {
+    return {
+      type: "silent",
+      answer: "Kinousei fallback (Discussion) no type",
+      memory: {},
+    };
+  }
+
+  const mapped = mapCommentTypeToRequestType(ctype);
+  const selectedText = getSelectedTextFromDiscussion(discussion, "Kinousei");
+  const draftStr = JSON.stringify(discussion.baseDraft);
+  const prevState: AgentState = { ...initalAgentState };
+
+  if (mapped === "requestComment") {
+    return await doRequestCommentKinousei(prevState, selectedText, draftStr, []);
+  } else if (mapped === "requestOpinion") {
+    return {
+      type: "answering",
+      answer: "",
+      memory: {},
+    };
+  } else if (mapped === "requestSuggestion") {
+    return {
+      type: "suggesting",
+      answer: "",
+      memory: {},
+    };
+  }
+
+  return {
+    type: "silent",
+    answer: "Kinousei fallback(Discussion)",
+    memory: {},
+  };
 }

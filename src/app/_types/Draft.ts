@@ -1,4 +1,4 @@
-import { Editor, Selection, Text, Transforms, Range, isEmpty } from "slate"
+import { Editor, Selection, Text, Transforms, Range } from "slate"
 import { ReactEditor } from "slate-react";
 
 ////////////////////////////////////////
@@ -24,13 +24,8 @@ export type DraftSelection = Selection;
 
 export const emptyDraft: Draft = [{ type: 'paragraph', children: [{ text: '' }] }];
 
-
-export class DraftAccessor
-{
-  constructor(
-    private readonly editor: Editor
-  )
-  {}
+export class DraftAccessor {
+  constructor(public readonly editor: Editor) {}
 
   public logString(): void {
     console.log(Editor.string(this.editor, []));
@@ -41,22 +36,35 @@ export class DraftAccessor
   }
 
   public isRangeExpanded(): boolean {
-    if (!this.editor.selection) { return false; }
-    return !!this.editor.selection && Range.isExpanded(this.editor.selection);
+    if (!this.editor.selection) return false;
+    return Range.isExpanded(this.editor.selection);
+  }
+
+  public getCurrentRange(): Range | null {
+    if (!this.editor.selection) {
+      return null;
+    }
+    return this.editor.selection;
   }
 
   public getAnchorCursorForLayout(): DOMRect | undefined {
     const selection = this.editor.selection;
-    if (!selection) { return undefined; }
-    const anchorRange = ReactEditor.toDOMRange(this.editor, { anchor: selection.anchor, focus: selection.anchor })
-    return anchorRange.getBoundingClientRect();         
+    if (!selection) return undefined;
+    const anchorRange = ReactEditor.toDOMRange(this.editor, {
+      anchor: selection.anchor,
+      focus: selection.anchor,
+    });
+    return anchorRange.getBoundingClientRect();
   }
 
   public getFocusCursorForLayout(): DOMRect | undefined {
     const selection = this.editor.selection;
-    if (!selection) { return undefined; }
-    const focusRange = ReactEditor.toDOMRange(this.editor, { anchor: selection.focus, focus: selection.focus })
-    return focusRange.getBoundingClientRect();      
+    if (!selection) return undefined;
+    const focusRange = ReactEditor.toDOMRange(this.editor, {
+      anchor: selection.focus,
+      focus: selection.focus,
+    });
+    return focusRange.getBoundingClientRect();
   }
 
   public replaceDraft(draft: Draft): void {
@@ -65,25 +73,28 @@ export class DraftAccessor
   }
 
   public applySelection(selection: DraftSelection, id?: string): void {
-    if (!selection) { return; }
+    if (!selection) return;
+
     Transforms.setSelection(this.editor, selection);
     this.editor.addMark("selected", true);
+
     if (id) {
-      Editor
-        .nodes(this.editor, { at: selection, match: n => Text.isText(n) })
-        .forEach(([node, path]) => {
-          if (Text.isText(node) && 'selected' in node) {
-            const idSet = new Set(node.ids).add(id);
-            Transforms.setNodes(this.editor, { ids: [...idSet] }, { at: path });
-          }
-        });
+      const nodes = Editor.nodes(this.editor, {
+        at: selection,
+        match: n => Text.isText(n),
+      });
+      for (const [node, path] of nodes) {
+        if (Text.isText(node) && 'selected' in node) {
+          const idSet = new Set(node.ids).add(id);
+          Transforms.setNodes(this.editor, { ids: [...idSet] }, { at: path });
+        }
+      }
     }
-    Transforms.deselect(this.editor);
   }
 
-  // ユーザーがエディタ上で選択している範囲を選択状態にする
   public applySelectionToExpandedRange(id?: string): void {
     const selection = this.editor.selection;
+    if (!selection) return;
     this.applySelection(selection, id);
   }
 }

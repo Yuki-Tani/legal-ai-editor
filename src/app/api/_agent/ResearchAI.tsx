@@ -1,6 +1,8 @@
 "use server";
 
-import { AgentRequest, AgentState, AgentRequestType } from "./types";
+import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
+import { Discussion } from "@/types/Discussion";
+import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
 
 const fallbackMessages: Record<AgentRequestType, string> = {
   requestDraft: "ちょっとわかんないですね。",
@@ -22,7 +24,6 @@ async function callFlaskGeminiSearch(text: string): Promise<string> {
       throw new Error("Flask API から空のレスポンスが返されました");
     }
     let data;
-    console.log(responseText);
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
@@ -33,33 +34,83 @@ async function callFlaskGeminiSearch(text: string): Promise<string> {
       throw new Error(data.error || "Flask API エラー");
     }
 
-    return data.result;
+    return data.context;
   } catch (error) {
     console.error("Flask API 呼び出しエラー:", error);
     return "";
   }
 }
 
+async function doRequestCommentResearch(
+  prevState: AgentState,
+  selectedText: string,
+  draft: string
+): Promise<AgentState> {
+  const text = selectedText === "" ? draft : selectedText;
+  const searchResult = await callFlaskGeminiSearch(text);
+  return {
+    type: "commenting",
+    answer: searchResult,
+    memory: prevState.memory,
+  };
+}
+
 export async function RequestAction(
   prevState: AgentState,
   request: AgentRequest
-): Promise<AgentState> {
-  switch (request.type) {
-    case "requestComment": {
-      const { selection, coreIdea, draft } = request;
-      const { text: selectedText, comments } = selection;
-      const text = selectedText === "" ? draft : selectedText;
-      const searchResult = await callFlaskGeminiSearch(text);
-      console.log(searchResult);
-      return {
-        type: "commenting",
-        answer: searchResult,
-        memory: prevState.memory,
-      };
-    }
+): Promise<AgentState>;
+export async function RequestAction(
+  discussion: Discussion
+): Promise<AgentState>;
 
-    default: {
-      return prevState;
+export async function RequestAction(
+  arg1: AgentState | Discussion,
+  arg2?: AgentRequest
+): Promise<AgentState> {
+  if (arg2 !== undefined) {
+    const prevState = arg1 as AgentState;
+    const request = arg2;
+    if (request.type === "requestComment") {
+      const { text: selectedText } = request.selection;
+      return await doRequestCommentResearch(prevState, selectedText, request.draft);
     }
+    return prevState;
   }
+
+  const discussion = arg1 as Discussion;
+  const ctype = discussion.commentRequest?.type;
+  if (!ctype) {
+    return {
+      type: "silent",
+      answer: "ResearchAI: discussion has no commentRequest",
+      memory: {},
+    };
+  }
+
+  const mapped = mapCommentTypeToRequestType(ctype);
+  const selectedText = getSelectedTextFromDiscussion(discussion, "ResearchAI");
+  const draftStr = JSON.stringify(discussion.baseDraft);
+  const prevState: AgentState = { ...initalAgentState };
+
+  if (mapped === "requestComment") {
+    return await doRequestCommentResearch(prevState, selectedText, draftStr);
+  } else if (mapped === "requestOpinion") {
+    return {
+      type: "answering",
+      answer: "",
+      memory: {},
+    };
+  } else if (mapped === "requestSuggestion") {
+    return {
+      type: "suggesting",
+      answer: "",
+      memory: {},
+    };
+  }
+
+  return {
+    type: "silent",
+    answer: "ResearchAI fallback(Discussion)",
+    memory: {},
+  };
 }

@@ -4,24 +4,14 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod";
+import { IdeaInterviewerResponseScheme, IdeaInterviewerRequest, IdeaInterviewerResponse } from "./IdeaInterviewerTypes";
+
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
 });
 
-const IdeaInterviewerResponseScheme = z.object({
-  requirements: z.array(z.string()),
-}).required();
-
 const IdeaInterviewerResponseFormat = zodResponseFormat(IdeaInterviewerResponseScheme, "requirement_list");
-
-export type IdeaInterviewerRequest = {
-  label: string;
-  userRequirement: string;
-}
-export type IdeaInterviewerResponse = {
-  requirements: string[];
-}
 
 export default async function IdeaInterviewerAction(request: IdeaInterviewerRequest): Promise<IdeaInterviewerResponse> {
   console.log(request);
