@@ -1,6 +1,5 @@
 'use client'
-
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import panelStyles from "./Panel.module.css";
 import TextArea from "./TextArea";
 import Button from "./Button";
@@ -31,6 +30,8 @@ export default function IdeaInterviewPanel({
   const draftAccessor = useDraftAccessorContext();
   const [isCreatingDraftPending, startCreatingDraftTransition] = useTransition();
 
+  const didCallComplete = useRef(false);
+
   async function handleStartInterview() {
     startInterviewTransition(async () => {
       const response = await IdeaInterviewerAction({ label: "作成する文書の種類", userRequirement: draftKind });
@@ -60,14 +61,24 @@ export default function IdeaInterviewPanel({
   const isUserComplete = (isRequirementsComplete && answers.length == requirements.length);
   const isComplete = isUserComplete && !isCreatingDraftPending;
 
-  if (isComplete && onInterviewComplete) {
-    onInterviewComplete(requirements);
-  }
+  useEffect(() => {
+    if (isComplete && !didCallComplete.current) {
+      didCallComplete.current = true;
+
+      // setTimeout で次のtickに呼ぶ => "Cannot update a component..."を回避
+      if (onInterviewComplete) {
+        setTimeout(() => {
+          onInterviewComplete(requirements);
+        }, 0);
+      }
+    }
+  }, [isComplete, requirements, onInterviewComplete]);
 
   return (
     <Panel
       title="ドラフトの作成"
-      isOpen={isOpen} setIsOpen={setIsOpen}
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
       isComplete={isComplete}
     >
       { requirements.length == 0 ?

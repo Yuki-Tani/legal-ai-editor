@@ -42,14 +42,14 @@ function HomeContainer() {
       });
 
       const newDiscussions: Discussion[] = response.agents.map((agent, index) => ({
-        id: `${agent.id}-discussion-${discussions.length + index}`,
+        id: `${agent.id}-discussion-${Date.now()}-${Math.random()}`,
         title: `${agent.name} が思考中...`,
         baseDraft: draft,
         comments: [],
         commentRequest: {
           id: `comment-${discussions.length}-0`,
           agent,
-          type: "pointout",
+          type: "discuss",
         },
         isActive: index === 0,
         requirements, 
@@ -75,7 +75,7 @@ function HomeContainer() {
       });
 
       const newDiscussions: Discussion[] = response.agents.map((agent, index) => ({
-        id: `${agent.id}-discussion-${discussions.length + index}`,
+        id: `${agent.id}-discussion-${Date.now()}-${Math.random()}`,
         title: `選択範囲に関する ${agent.name} の議論`,
         baseDraft: draft,
         comments: [],
