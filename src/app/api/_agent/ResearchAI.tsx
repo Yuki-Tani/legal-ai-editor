@@ -1,6 +1,7 @@
 "use server";
 
 import { AgentRequest, AgentState, AgentRequestType } from "./types";
+import { Discussion } from "../../_types/Discussion";
 
 const fallbackMessages: Record<AgentRequestType, string> = {
   requestDraft: "ちょっとわかんないですね。",
@@ -43,23 +44,58 @@ async function callFlaskGeminiSearch(text: string): Promise<string> {
 export async function RequestAction(
   prevState: AgentState,
   request: AgentRequest
-): Promise<AgentState> {
-  switch (request.type) {
-    case "requestComment": {
-      const { selection, coreIdea, draft } = request;
-      const { text: selectedText, comments } = selection;
-      const text = selectedText === "" ? draft : selectedText;
-      const searchResult = await callFlaskGeminiSearch(text);
-      console.log(searchResult);
-      return {
-        type: "commenting",
-        answer: searchResult,
-        memory: prevState.memory,
-      };
-    }
+): Promise<AgentState>;
+export async function RequestAction(discussion: Discussion): Promise<AgentState>;
 
-    default: {
-      return prevState;
+export async function RequestAction(
+  arg1: AgentState | Discussion,
+  arg2?: AgentRequest
+): Promise<AgentState> {
+  if (arg2 !== undefined) {
+    const prevState = arg1 as AgentState;
+    const request = arg2 as AgentRequest;
+    switch (request.type) {
+      case "requestComment": {
+        const { selection, coreIdea, draft } = request;
+        const { text: selectedText } = selection;
+        const text = selectedText === "" ? draft : selectedText;
+        const searchResult = await callFlaskGeminiSearch(text);
+        console.log(searchResult);
+
+        return {
+          type: "commenting",
+          answer: searchResult,
+          memory: prevState.memory,
+        };
+      }
+      default: {
+        return {
+          ...prevState,
+          answer: fallbackMessages[request.type] ?? "不明なリクエストです。",
+        };
+      }
     }
   }
+
+  const discussion = arg1 as Discussion;
+
+  if (discussion.commentRequest?.type === "discuss") {
+    const text = discussion.selectedRange
+      ? "選択範囲のテキスト"
+      : JSON.stringify(discussion.baseDraft);
+
+    const searchResult = await callFlaskGeminiSearch(text);
+
+    return {
+      type: "commenting",
+      answer: searchResult,
+      memory: {},
+    };
+  }
+
+  return {
+    type: "commenting",
+    answer: "特に何も検索しませんでした。",
+    memory: {},
+  };
 }

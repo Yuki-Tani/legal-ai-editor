@@ -1,6 +1,8 @@
 import { Comment, Discussion } from "@/types/Discussion";
 import { RequestAction as BaseAIAction } from "./BaseAI";
+import { RequestAction as ResearchAIAction } from "./ResearchAI";
 import { initalAgentState } from "./types";
+
 
 export async function AgentAction(discussion: Discussion) : Promise<Comment> {
   const commentRequest = discussion.commentRequest;
@@ -9,6 +11,7 @@ export async function AgentAction(discussion: Discussion) : Promise<Comment> {
 
   console.log(commentRequest);
 
+  /*
   if (commentRequest.agent.id === "basic") {
     // TODO: 定義を書き換えて、そのままリターンさせる
     // return BaseAIAction(discussion);\
@@ -20,7 +23,7 @@ export async function AgentAction(discussion: Discussion) : Promise<Comment> {
         agent: commentRequest.agent,
         type: commentRequest.type,
         message: result.answer ?? `特になにもありません`,
-        draft: undefined, // 本当は選択した場所を返す
+        draft: discussion.baseDraft,
       };
     }
     if (commentRequest.type === "discuss") {
@@ -32,8 +35,37 @@ export async function AgentAction(discussion: Discussion) : Promise<Comment> {
         draft: undefined,
       };
     }
-  }
+  } else if (commentRequest.agent.id === "web-research") {
+    if (commentRequest.type === "discuss") {
+      const result = await ResearchAIAction(discussion);
+      return {
+        id: commentRequest.id,
+        agent: commentRequest.agent,
+        type: commentRequest.type,
+        message: result.answer ?? "(web-research)何も応答がありませんでした",
+        draft: discussion.baseDraft,
+      };
+    }
 
+    return {
+      id: commentRequest.id,
+      agent: commentRequest.agent,
+      type: commentRequest.type ?? "discuss",
+      message: `${commentRequest.type}: 特になにもありません。(web-research fallback)`,
+      draft: undefined,
+    };
+  }*/
+
+  if (commentRequest.type === "discuss") {
+    const result = await ResearchAIAction(discussion);
+    return {
+      id: commentRequest.id,
+      agent: commentRequest.agent,
+      type: commentRequest.type,
+      message: result.answer ?? "(web-research)何も応答がありませんでした",
+      draft: discussion.baseDraft,
+    };
+  }
   return {
     id: commentRequest.id,
     agent: commentRequest.agent,
