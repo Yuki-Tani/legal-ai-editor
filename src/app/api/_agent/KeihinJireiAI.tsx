@@ -3,7 +3,7 @@
 import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
 import { Discussion } from "@/types/Discussion";
 import OpenAI from "openai";
-import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
+import { mapCommentTypeToRequestType } from "./AICommon";
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
@@ -66,10 +66,12 @@ async function doRequestCommentKeihin(
   prevState: AgentState,
   selectedText: string,
   draft: string,
+  coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
   const searchResults = await callFlaskGetContext(selectedText || draft);
-  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する景品表示法処分事例、ユーザとのやりとりが与えられます。以下の景品表示法処分事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には「事例の処分日時、サービス、処分内容、表示と実際、違反分類、罰則」などの処分事例を詳細に要約した散文文章を含むコメントのみを返信してください。\n\nユーザーの文章；${selectedText}\n\n景品表示法処分事例：${searchResults}`;
+  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する景品表示法処分事例、ユーザとのやりとりが与えられます。以下の景品表示法処分事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には「事例の処分日時、サービス、処分内容、表示と実際、違反分類、罰則」などの処分事例を詳細に要約した散文文章を含むコメントのみを返信してください。
+  アイデアと要件；${coreIdea}\n\nユーザーの文章；${selectedText}\n\n景品表示法処分事例：${searchResults}`;
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemMessage },
@@ -105,7 +107,8 @@ export async function RequestAction(
     if (request.type === "requestComment") {
       const { text: selectedText, comments } = request.selection;
       const draft = request.draft;
-      return await doRequestCommentKeihin(prevState, selectedText, draft, comments || []);
+      const coreIdea = request.coreIdea;
+      return await doRequestCommentKeihin(prevState, selectedText, draft, coreIdea, comments || []);
     }
     return arg1 as AgentState;
   }
@@ -117,12 +120,14 @@ export async function RequestAction(
   }
 
   const mapped = mapCommentTypeToRequestType(ctype);
-  const selectedText = getSelectedTextFromDiscussion(discussion, "KeihinJireAI");
+  const selectedText = discussion.selectedText || "";
   const draftStr = JSON.stringify(discussion.baseDraft);
   const prevState: AgentState = { ...initalAgentState };
 
   if (mapped === "requestComment") {
-    return await doRequestCommentKeihin(prevState, selectedText, draftStr, []);
+    const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+    const comments = discussion.comments.map((c) => ({ author: c.agent.id === "manager" ? "user" : "assistant", content: c.message }));
+    return await doRequestCommentKeihin(prevState, selectedText, draftStr, coreIdea, comments);
   } else if (mapped === "requestOpinion") {
     return {
       type: "answering",

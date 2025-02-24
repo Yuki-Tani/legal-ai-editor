@@ -14,11 +14,3 @@ export function mapCommentTypeToRequestType(type: string | undefined): AgentRequ
       return "requestComment";     // fallback
   }
 }
-
-
-export function getSelectedTextFromDiscussion(discussion: Discussion, label?: string): string {
-  if (discussion.selectedRange) {
-    return `選択範囲の文字列(${label ?? "Common"})`;
-  }
-  return "";
-}

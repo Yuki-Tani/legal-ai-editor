@@ -3,7 +3,7 @@
 import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
 import { Discussion } from "@/types/Discussion";
 import OpenAI from "openai";
-import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
+import { mapCommentTypeToRequestType } from "./AICommon";
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
@@ -69,11 +69,13 @@ async function doRequestCommentTokutei(
   prevState: AgentState,
   selectedText: string,
   draft: string,
+  coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
   const text = selectedText === "" ? draft : selectedText;
   const searchResults = await callFlaskGetContext(text);
-  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。\n\n文章；${selectedText}\n\n特定商取引法違反執行事例：${searchResults}`;
+  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。
+  アイデアと要件；${coreIdea}\n\n文章；${selectedText}\n\n特定商取引法違反執行事例：${searchResults}`;
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemMessage },
@@ -110,10 +112,12 @@ export async function RequestAction(
     const request = arg2;
     if (request.type === "requestComment") {
       const { text: selectedText, comments } = request.selection;
+      const coreIdea = request.coreIdea;
       return await doRequestCommentTokutei(
         prevState,
         selectedText,
         request.draft,
+        coreIdea,
         comments || []
       );
     }
@@ -131,12 +135,14 @@ export async function RequestAction(
   }
 
   const mapped = mapCommentTypeToRequestType(t);
-  const selectedText = getSelectedTextFromDiscussion(discussion, "Tokutei");
+  const selectedText = discussion.selectedText || "";
   const draftStr = JSON.stringify(discussion.baseDraft);
   const prevState: AgentState = { ...initalAgentState };
 
   if (mapped === "requestComment") {
-    return await doRequestCommentTokutei(prevState, selectedText, draftStr, []);
+    const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+    const comments = discussion.comments.map((c) => ({ author: c.agent.id === "manager" ? "user" : "assistant", content: c.message }));
+    return await doRequestCommentTokutei(prevState, selectedText, draftStr, coreIdea, comments);
   } else if (mapped === "requestOpinion") {
     return {
       type: "answering",

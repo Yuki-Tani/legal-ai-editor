@@ -2,7 +2,7 @@
 
 import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./types";
 import { Discussion } from "@/types/Discussion";
-import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
+import { mapCommentTypeToRequestType } from "./AICommon";
 
 const fallbackMessages: Record<AgentRequestType, string> = {
   requestDraft: "ちょっとわかんないですね。",
@@ -88,7 +88,7 @@ export async function RequestAction(
   }
 
   const mapped = mapCommentTypeToRequestType(ctype);
-  const selectedText = getSelectedTextFromDiscussion(discussion, "ResearchAI");
+  const selectedText = discussion.selectedText || "";
   const draftStr = JSON.stringify(discussion.baseDraft);
   const prevState: AgentState = { ...initalAgentState };
 

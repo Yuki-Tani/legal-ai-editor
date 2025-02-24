@@ -3,7 +3,7 @@
 import OpenAI from "openai";
 import { AgentRequest, AgentState, initalAgentState, AgentRequestType } from "./types";
 import { Discussion } from "@/types/Discussion";
-import { mapCommentTypeToRequestType, getSelectedTextFromDiscussion } from "./AICommon";
+import { mapCommentTypeToRequestType } from "./AICommon";
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
@@ -154,11 +154,12 @@ export async function RequestAction(
   }
   const mapped = mapCommentTypeToRequestType(t);
   const draftStr = JSON.stringify(discussion.baseDraft);
-  const selectedText = getSelectedTextFromDiscussion(discussion, "PublicComment");
+  const selectedText = discussion.selectedText || "";
   const prevState: AgentState = { ...initalAgentState };
 
   if (mapped === "requestOpinion" || mapped === "requestComment") {
-    return await doRequestOpinionOrCommentPublic(prevState, draftStr, "");
+    const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+    return await doRequestOpinionOrCommentPublic(prevState, draftStr, coreIdea);
   } else if (mapped === "requestSuggestion") {
     return {
       type: "suggesting",
