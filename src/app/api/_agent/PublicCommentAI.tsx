@@ -119,6 +119,7 @@ async function doRequestOpinionOrCommentPublic(
       return { author: role, content: op };
     })
   );
+  console.log(opinions);
   return {
     type: "multipleComments",
     answers: opinions,
@@ -158,7 +159,7 @@ export async function RequestAction(
   const prevState: AgentState = { ...initalAgentState };
 
   if (mapped === "requestOpinion" || mapped === "requestComment") {
-    const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+    const coreIdea = discussion.requirements || "";;
     return await doRequestOpinionOrCommentPublic(prevState, draftStr, coreIdea);
   } else if (mapped === "requestSuggestion") {
     return {

@@ -17,7 +17,7 @@ export default function IdeaInterviewPanel({
 } : {
   isOpen: boolean,
   setIsOpen: (isOpen: boolean) => void,
-  onInterviewComplete?: (requirements: string[]) => void,
+  onInterviewComplete?: (requirements: string) => void,
 }) {
   const [draftKind, setDraftKind] = useState("");
   const [isInterviewPending, startInterviewTransition] = useTransition();
@@ -68,7 +68,10 @@ export default function IdeaInterviewPanel({
       // setTimeout で次のtickに呼ぶ => "Cannot update a component..."を回避
       if (onInterviewComplete) {
         setTimeout(() => {
-          onInterviewComplete(requirements);
+          const requestText =
+            `作成する文書の種類: ${draftKind}\n` +
+            requirements.map((req, index) => `Q: ${req}\nA: ${answers[index]}`).join("\n");
+          onInterviewComplete(requestText);
         }, 0);
       }
     }

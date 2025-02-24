@@ -28,17 +28,25 @@ export default function DiscussionPanel({
 
   useEffect(() => {
     if (!discussion.isActive || discussion.isCompleted || isThinkPending || isPickAgentPending) { return; }
-    if (discussion.comments.length > 10) { return; } // とりあえず、暴走を防ぐため上限を設ける
+
+    // とりあえず、暴走を防ぐため上限を設ける
+    if (discussion.comments.length > 10) {
+      setDiscussion({ ...discussion, isCompleted: true });
+      return;
+    }
     if (discussion.commentRequest && discussion.commentRequest.agent.id !== "manager") {
       // commentRequest がある場合は、エージェントを動かす
       startThinkTransition(async () => {
         console.log("request agent action");
-        const comment = await AgentAction(discussion);
-        setDiscussion({
-          ...discussion,
-          comments: [...discussion.comments, comment],
-          commentRequest: null,
-        });
+        const comments = await AgentAction(discussion);
+        //　複数のコメントが返ってくる場合は、一つずつ処理する
+        for (const comment of comments) {
+          setDiscussion({
+            ...discussion,
+            comments: [...discussion.comments, comment],
+            commentRequest: null,
+          });
+        }
       });
     }
     if (!discussion.commentRequest)
@@ -49,6 +57,14 @@ export default function DiscussionPanel({
           ((discussion.comments.length > MinAgentLoop) ? agent.id !== "" : agent.id !== "manager") && // 最初の数回は manager を選ばない
           discussion.comments[discussion.comments.length - 1]?.agent.id !== agent.id // 直前のエージェントと同じエージェントは選ばない
         );
+
+        // もし candidate が空 => もう誰も発話できない => 終了
+        if (candidate.length === 0) {
+          console.log("No more candidate. Discussion ends.");
+          setDiscussion({ ...discussion, isCompleted: true });
+          return;
+        }
+
         const response = await NextCommentorPickerAction({discussion, candidate});
         setDiscussion({
           ...discussion,
@@ -63,6 +79,7 @@ export default function DiscussionPanel({
   }, [discussion, isPickAgentPending, isThinkPending, setDiscussion]);
 
   function handleAnswer() {
+    if (!discussion.commentRequest) return;
     setDiscussion({
       ...discussion,
       comments: [...discussion.comments, {
@@ -102,7 +119,7 @@ export default function DiscussionPanel({
             agentIconType={getAgentIconType(discussion.commentRequest.agent.id)}
             agentName={discussion.commentRequest.agent.name}
           >
-            思考中...
+            が思考中...
           </AgentMessage>
         </> 
       }
