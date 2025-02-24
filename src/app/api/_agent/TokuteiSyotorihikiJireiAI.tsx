@@ -140,7 +140,7 @@ export async function RequestAction(
   const prevState: AgentState = { ...initalAgentState };
 
   if (mapped === "requestComment") {
-    const coreIdea = discussion.requirements ? discussion.requirements.join("\n") : "";
+    const coreIdea = discussion.requirements || "";
     const comments = discussion.comments.map((c) => ({ author: c.agent.id === "manager" ? "user" : "assistant", content: c.message }));
     return await doRequestCommentTokutei(prevState, selectedText, draftStr, coreIdea, comments);
   } else if (mapped === "requestOpinion") {

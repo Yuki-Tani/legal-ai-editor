@@ -8,7 +8,7 @@ import { RequestAction as ResearchAIAction } from "./ResearchAI";
 import { RequestAction as PublicCommentAIAction } from "./PublicCommentAI";
 import { AgentState } from "./types";
 
-export async function AgentAction(discussion: Discussion): Promise<Comment> {
+export async function AgentAction(discussion: Discussion): Promise<Comment[]> {
   const commentRequest = discussion.commentRequest;
   if (!commentRequest) {
     throw new Error("commentRequest is not set");
@@ -18,13 +18,13 @@ export async function AgentAction(discussion: Discussion): Promise<Comment> {
   }
 
   if (commentRequest.type === "agree") {
-    return {
+    return [{
       id: commentRequest.id,
       agent: commentRequest.agent,
       type: commentRequest.type,
       message: `agree: 特になにもありません。`,
       draft: undefined,
-    };
+    }];
   }
 
   let resultState: AgentState;
@@ -55,6 +55,17 @@ export async function AgentAction(discussion: Discussion): Promise<Comment> {
     }
     case "public-comment": {
       resultState = await PublicCommentAIAction(discussion);
+      if (resultState.type === "multipleComments") {
+        // 複数のコメントについてそれぞれのコメントについて返答を行う
+        const comments = resultState.answers || [];
+        return comments.map((c) => ({
+          id: commentRequest.id,
+          agent: commentRequest.agent,
+          type: commentRequest.type ?? "discuss",
+          message: c.content ?? "(no answer)",
+          draft: undefined,
+        }));
+      }
       break;
     }
     default: {
@@ -67,11 +78,11 @@ export async function AgentAction(discussion: Discussion): Promise<Comment> {
     }
   }
 
-  return {
+  return [{
     id: commentRequest.id,
     agent: commentRequest.agent,
     type: commentRequest.type ?? "discuss",
     message: resultState.answer ?? "(no answer)",
     draft: undefined,
-  };
+  }];
 }

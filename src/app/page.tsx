@@ -3,7 +3,7 @@ import { DraftContext, useDraftContext } from "./_components/DraftContext";
 import DraftEditor from "./_components/DraftEditor";
 import styles from "./page.module.css";
 import IdeaInterviewPanel from "./_components/IdeaInterviewPanel";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Button from "./_components/Button";
 import { AgentPickerAction } from "./api/_agent/AgentPicker";
 import { AgentPoolWithoutManager } from "./_types/Agent";
@@ -11,6 +11,7 @@ import { Discussion } from "./_types/Discussion";
 import DiscussionPanel from "./_components/DiscussionPanel";
 import { DraftEditorFocusedRangePopup } from "./_components/DraftEditorPopup";
 import { Range, Range as SlateRange } from "slate";
+import CommonDraftWriterAction from "@/api/_agent/CommonDraftWriter";
 
 export default function Home() {
   return (
@@ -26,14 +27,14 @@ function HomeContainer() {
   const [draft, draftAccessor] = useDraftContext();
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [isPickAgentPending, startPickAgentTransition] = useTransition();
-  const [interviewRequirements, setInterviewRequirements] = useState<string[]>([]);
+  const [interviewRequirements, setInterviewRequirements] = useState<string>();
 
-  async function handleIdeaInterviewComplete(requirements: string[]) {
+  async function handleIdeaInterviewComplete(requirements: string) {
     setInterviewRequirements(requirements);
     handleGatherOpinion(requirements);
   }
 
-  async function handleGatherOpinion(requirements: string[]) {
+  async function handleGatherOpinion(requirements: string) {
     startPickAgentTransition(async () => {
       const response = await AgentPickerAction({
         request: "文書の性質を考慮して、作成中の文書の問題点を的確に指摘できる可能性の高いエージェントを複数選択せよ。",
@@ -41,6 +42,7 @@ function HomeContainer() {
         candidate: AgentPoolWithoutManager,
       });
 
+      /*
       const newDiscussions: Discussion[] = response.agents.map((agent, index) => ({
         id: `${agent.id}-discussion-${Date.now()}-${Math.random()}`,
         title: `${agent.name} が思考中...`,
@@ -54,8 +56,24 @@ function HomeContainer() {
         isActive: index === 0,
         requirements, 
       }));
-
       setDiscussions((prev) => [...prev, ...newDiscussions]);
+      */
+     
+      //最初の一個のagentだけを選択する
+      const newDiscussion: Discussion = {
+        id: `${response.agents[0].id}-discussion-${Date.now()}-${Math.random()}`,
+        title: `${response.agents[0].name} が思考中...`,
+        baseDraft: draft,
+        comments: [],
+        commentRequest: {
+          id: `comment-${discussions.length}-0`,
+          agent: response.agents[0],
+          type: "discuss",
+        },
+        isActive: true,
+        requirements,
+      };
+      setDiscussions((prev) => [...prev, newDiscussion]);
     });
   }
 
@@ -74,6 +92,7 @@ function HomeContainer() {
         candidate: AgentPoolWithoutManager
       });
 
+      /*
       const newDiscussions: Discussion[] = response.agents.map((agent, index) => ({
         id: `${agent.id}-discussion-${Date.now()}-${Math.random()}`,
         title: `選択範囲に関する ${agent.name} の議論`,
@@ -90,14 +109,44 @@ function HomeContainer() {
         requirements: interviewRequirements,
       }));
       setDiscussions(prev => [...prev, ...newDiscussions]);
+      */
+      //最初の一個のagentだけを選択する
+      const newDiscussion: Discussion = {
+        id: `${response.agents[0].id}-discussion-${Date.now()}-${Math.random()}`,
+        title: `${response.agents[0].name} が思考中...`,
+        baseDraft: draft,
+        comments: [],
+        commentRequest: {
+          id: `comment-${discussions.length}-0`,
+          agent: response.agents[0],
+          type: "discuss",
+        },
+        isActive: true,
+        requirements: interviewRequirements,
+      };
+      setDiscussions((prev) => [...prev, newDiscussion]);
     });
   }
 
-  const handleSetDiscussion = useCallback((discussion: Discussion) => {
-    setDiscussions(prev =>
-      prev.map(d => (d.id === discussion.id ? discussion : d))
-    );
+  const handleSetDiscussion = useCallback((newDisc: Discussion) => {
+    setDiscussions(prev => {
+      const oldDisc = prev.find(d => d.id === newDisc.id);
+      const wasCompleted = oldDisc?.isCompleted;
+      const updated = prev.map(d => d.id === newDisc.id ? newDisc : d);
+
+      if (newDisc.isCompleted && !wasCompleted) {
+        createDraftFromDiscussion(newDisc);
+      }
+      return updated;
+    });
   }, []);
+
+  async function createDraftFromDiscussion(discussion: Discussion) {
+    console.log("Creating draft from discussion", discussion);
+    const requestText = interviewRequirements || "";
+    const response = await CommonDraftWriterAction([], requestText, discussion);
+    draftAccessor.replaceDraft(response);
+  }
 
   return (
     <div style={{ display: "flex" }}>
@@ -159,7 +208,7 @@ export function DiscussionArea({
 }: {
   discussions: Discussion[];
   setDiscussion: (discussion: Discussion) => void;
-  handleIdeaInterviewComplete: (requirements: string[]) => void;
+  handleIdeaInterviewComplete: (requirements: string) => void;
   isPickAgentPending: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(true);
