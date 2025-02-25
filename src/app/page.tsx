@@ -4,11 +4,10 @@ import DraftEditor from "./_components/DraftEditor";
 import styles from "./page.module.css";
 import IdeaInterviewPanel from "./_components/IdeaInterviewPanel";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import Button from "./_components/Button";
 import { AgentPickerAction } from "./api/_agent/AgentPicker";
 import { AgentPoolWithoutManager } from "./_types/Agent";
 import { Discussion } from "./_types/Discussion";
-import DiscussionPanel from "./_components/DiscussionPanel";
+import { AutoDiscussionPanel } from "./_components/DiscussionPanel";
 import { DraftEditorFocusedRangePopup } from "./_components/DraftEditorPopup";
 import { Range, Range as SlateRange } from "slate";
 import CommonDraftWriterAction from "@/api/_agent/CommonDraftWriter";
@@ -222,7 +221,7 @@ export function DiscussionArea({
       />
 
       {discussions.map((discussion) => (
-        <DiscussionPanel
+        <AutoDiscussionPanel
           key={discussion.id}
           discussion={discussion}
           setDiscussion={setDiscussion}
