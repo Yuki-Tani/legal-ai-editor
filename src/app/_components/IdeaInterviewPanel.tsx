@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition, useEffect, useRef } from "react";
+import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import panelStyles from "./Panel.module.css";
 import TextArea from "./TextArea";
 import Button from "./Button";
@@ -9,6 +9,12 @@ import { useDraftAccessorContext } from "./DraftContext";
 import { AgentIconType } from "./AgentIcon";
 import AgentMessage from "./AgentMessage";
 import Panel from "./Panel";
+import DraftStructuringAction from "@/api/_agent/DraftStructuringAI";
+import { AgentPickerAction } from "@/api/_agent/AgentPicker";
+import { Draft } from "@/types/Draft";
+import { Discussion } from "@/types/Discussion";
+import { AgentPoolWithoutManager, getAgentIconType } from "@/types/Agent";
+import DiscussionPanel from "./DiscussionPanel";
 
 export default function IdeaInterviewPanel({
   isOpen,
@@ -23,6 +29,7 @@ export default function IdeaInterviewPanel({
   const [isInterviewPending, startInterviewTransition] = useTransition();
 
   const [requirements, setRequirements] = useState<string[]>([]);
+  const [requestText, setRequestText] = useState<string>("");
 
   const [answerText, setAnswerText] = useState("");
   const [answers, setAnswers] = useState<string[]>([]);
@@ -30,6 +37,10 @@ export default function IdeaInterviewPanel({
   const draftAccessor = useDraftAccessorContext();
   const [isCreatingDraftPending, startCreatingDraftTransition] =
     useTransition();
+
+  const [draftAIDiscussions, setDraftAIDiscussions] = useState<Discussion[]>(
+    []
+  );
 
   const didCallComplete = useRef(false);
 
@@ -51,12 +62,24 @@ export default function IdeaInterviewPanel({
     if (answers.length + 1 == requirements.length) {
       startCreatingDraftTransition(async () => {
         const requestText =
-          `作成する文書の種類: ${draftKind}\n` +
+          `# 作成する文書の種類\n ${draftKind}\n` +
           requirements
             .map((req, index) => `Q: ${req}\nA: ${answers[index]}`)
             .join("\n");
 
+        setRequestText(requestText);
+
+        // AIとDiscussion
+
+        // const draft_structure_str = await DraftStructuringAction(requestText);
+        // const draft_structure = `# 作成する文書の構造\n
+        //   以下の構造に従ってドラフト文書を作成せよ。
+        //   "${draft_structure_str}"`;
+
+        const discussion = null;
+
         const response = await CommonDraftWriterAction([], requestText);
+
         draftAccessor.replaceDraft(response);
         setIsOpen(false);
       });
@@ -123,9 +146,9 @@ export default function IdeaInterviewPanel({
         <div key={requirements[index]}>
           <AgentMessage
             agentIconType={AgentIconType.Hearing}
-            agentName={`Q: ${requirements[index]}`}
+            agentName={"インタビュアー AI"}
           >
-            <></>
+            <>{`Q: ${requirements[index]}`}</>
           </AgentMessage>
 
           <p>{answer}</p>
@@ -136,9 +159,9 @@ export default function IdeaInterviewPanel({
         <div>
           <AgentMessage
             agentIconType={AgentIconType.Hearing}
-            agentName={`Q: ${requirements[answers.length]}`}
+            agentName={"インタビュアー AI"}
           >
-            <></>
+            <>{`Q: ${requirements[answers.length]}`}</>
           </AgentMessage>
           <TextArea value={answerText} onChange={setAnswerText} />
           <div className={panelStyles.buttons}>
@@ -154,6 +177,11 @@ export default function IdeaInterviewPanel({
           ドラフトを作成しています...
         </AgentMessage>
       )}
+
+      {draftAIDiscussions.map((discussion) => (
+        <DiscussionArea discussion={discussion} />
+      ))}
+
       {isComplete && (
         <>
           <hr />
@@ -166,5 +194,35 @@ export default function IdeaInterviewPanel({
         </>
       )}
     </Panel>
+  );
+}
+
+function DiscussionArea({ discussion }: { discussion: Discussion }) {
+  return (
+    <>
+      {discussion.comments.map((comment) => (
+        <div key={comment.id}>
+          <hr />
+          <AgentMessage
+            key={comment.id}
+            agentIconType={getAgentIconType(comment.agent.id)}
+            agentName={comment.agent.name}
+          >
+            {comment.message}
+          </AgentMessage>
+        </div>
+      ))}
+      {discussion.commentRequest && (
+        <>
+          <hr />
+          <AgentMessage
+            agentIconType={getAgentIconType(discussion.commentRequest.agent.id)}
+            agentName={discussion.commentRequest.agent.name}
+          >
+            が思考中...
+          </AgentMessage>
+        </>
+      )}
+    </>
   );
 }
