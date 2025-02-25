@@ -72,10 +72,14 @@ async function doRequestCommentTokutei(
   coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
-  const text = selectedText === "" ? draft : selectedText;
-  const searchResults = await callFlaskGetContext(text);
-  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。
+  let searchText = selectedText || draft || coreIdea;
+  const searchResults = await callFlaskGetContext(searchText);
+  let systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。
   アイデアと要件；${coreIdea}\n\n文章；${selectedText}\n\n特定商取引法違反執行事例：${searchResults}`;
+  if (searchText == coreIdea) {
+    systemMessage = `法律文章についてのアイデアと要件、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。
+  アイデアと要件；${coreIdea}\n\n特定商取引法違反執行事例：${searchResults}`;
+  }
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemMessage },

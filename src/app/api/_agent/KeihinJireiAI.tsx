@@ -4,6 +4,7 @@ import { AgentRequest, AgentState, AgentRequestType, initalAgentState } from "./
 import { Discussion } from "@/types/Discussion";
 import OpenAI from "openai";
 import { mapCommentTypeToRequestType } from "./AICommon";
+import { last } from "slate";
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
@@ -69,9 +70,14 @@ async function doRequestCommentKeihin(
   coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
-  const searchResults = await callFlaskGetContext(selectedText || draft);
-  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する景品表示法処分事例、ユーザとのやりとりが与えられます。以下の景品表示法処分事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には「事例の処分日時、サービス、処分内容、表示と実際、違反分類、罰則」などの処分事例を詳細に要約した散文文章を含むコメントのみを返信してください。
+  let searchText = selectedText || draft || coreIdea;
+  const searchResults = await callFlaskGetContext(searchText);
+  let systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する景品表示法処分事例、ユーザとのやりとりが与えられます。以下の景品表示法処分事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には「事例の処分日時、サービス、処分内容、表示と実際、違反分類、罰則」などの処分事例を詳細に要約した散文文章を含むコメントのみを返信してください。
   アイデアと要件；${coreIdea}\n\nユーザーの文章；${selectedText}\n\n景品表示法処分事例：${searchResults}`;
+  if (searchText == coreIdea) {
+    systemMessage = `法律文章についてのアイデアと要件、関連する景品表示法処分事例、ユーザとのやりとりが与えられます。以下の景品表示法処分事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には「事例の処分日時、サービス、処分内容、表示と実際、違反分類、罰則」などの処分事例を詳細に要約した散文文章を含むコメントのみを返信してください。
+  アイデアと要件；${coreIdea}\n\n景品表示法処分事例：${searchResults}`;
+  }
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemMessage },
