@@ -1,5 +1,12 @@
 "use client";
-import { useState, useTransition, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useTransition,
+  useEffect,
+  useRef,
+  useCallback,
+  startTransition,
+} from "react";
 import panelStyles from "./Panel.module.css";
 import TextArea from "./TextArea";
 import Button from "./Button";
@@ -15,6 +22,7 @@ import { Draft } from "@/types/Draft";
 import { Discussion } from "@/types/Discussion";
 import { AgentPoolWithoutManager, getAgentIconType } from "@/types/Agent";
 import DiscussionPanel from "./DiscussionPanel";
+import { DiscussionAction } from "@/api/Discussion";
 
 export default function IdeaInterviewPanel({
   isOpen,
@@ -38,9 +46,8 @@ export default function IdeaInterviewPanel({
   const [isCreatingDraftPending, startCreatingDraftTransition] =
     useTransition();
 
-  const [draftAIDiscussions, setDraftAIDiscussions] = useState<Discussion[]>(
-    []
-  );
+  const [discussion, setDiscussion] = useState<Discussion>();
+  const [isPendingDiscussion, startDiscussionTransition] = useTransition();
 
   const didCallComplete = useRef(false);
 
@@ -71,25 +78,59 @@ export default function IdeaInterviewPanel({
 
         // AIとDiscussion
 
+        setDiscussion({
+          id: "interview",
+          title: "",
+          baseDraft: [],
+          comments: [],
+          commentRequest: null,
+        });
+
         // const draft_structure_str = await DraftStructuringAction(requestText);
         // const draft_structure = `# 作成する文書の構造\n
         //   以下の構造に従ってドラフト文書を作成せよ。
         //   "${draft_structure_str}"`;
 
-        const discussion = null;
+        // const response = await CommonDraftWriterAction([], requestText);
 
-        const response = await CommonDraftWriterAction([], requestText);
-
-        draftAccessor.replaceDraft(response);
-        setIsOpen(false);
+        // draftAccessor.replaceDraft(response);
+        // setIsOpen(false);
       });
     }
   }
 
+  useEffect(() => {
+    if (!discussion) {
+      return;
+    }
+    if (discussion.comments.length <= 3) {
+      startDiscussionTransition(async () => {
+        if (!!discussion) {
+          const newDiscussion = await DiscussionAction(
+            discussion,
+            AgentPoolWithoutManager
+          );
+          setDiscussion(newDiscussion);
+        }
+      });
+    } else {
+      startCreatingDraftTransition(async () => {
+        const response = await CommonDraftWriterAction(
+          [],
+          requestText,
+          discussion
+        );
+        draftAccessor.replaceDraft(response);
+        setIsOpen(false);
+      });
+    }
+  }, [discussion]);
+
   const isRequirementsComplete = requirements.length > 0;
   const isUserComplete =
     isRequirementsComplete && answers.length == requirements.length;
-  const isComplete = isUserComplete && !isCreatingDraftPending;
+  const isComplete =
+    isUserComplete && !isCreatingDraftPending && !isPendingDiscussion;
 
   useEffect(() => {
     if (isComplete && !didCallComplete.current) {
@@ -174,13 +215,12 @@ export default function IdeaInterviewPanel({
           agentIconType={AgentIconType.Basic}
           agentName={"ドラフト作成 AI"}
         >
-          ドラフトを作成しています...
+          ドラフトの作成を開始します...
         </AgentMessage>
       )}
-
-      {draftAIDiscussions.map((discussion) => (
+      {isUserComplete && !!discussion && (
         <DiscussionArea discussion={discussion} />
-      ))}
+      )}
 
       {isComplete && (
         <>

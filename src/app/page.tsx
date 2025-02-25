@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { DraftContext, useDraftContext } from "./_components/DraftContext";
 import DraftEditor from "./_components/DraftEditor";
 import styles from "./page.module.css";
@@ -29,14 +29,15 @@ function HomeContainer() {
   const [interviewRequirements, setInterviewRequirements] = useState<string>();
 
   async function handleIdeaInterviewComplete(requirements: string) {
-    setInterviewRequirements(requirements);
-    handleGatherOpinion(requirements);
+    // setInterviewRequirements(requirements);
+    // handleGatherOpinion(requirements);
   }
 
   async function handleGatherOpinion(requirements: string) {
     startPickAgentTransition(async () => {
       const response = await AgentPickerAction({
-        request: "文書の性質を考慮して、作成中の文書の問題点を的確に指摘できる可能性の高いエージェントを複数選択せよ。",
+        request:
+          "文書の性質を考慮して、作成中の文書の問題点を的確に指摘できる可能性の高いエージェントを複数選択せよ。",
         draft,
         candidate: AgentPoolWithoutManager,
       });
@@ -57,10 +58,12 @@ function HomeContainer() {
       }));
       setDiscussions((prev) => [...prev, ...newDiscussions]);
       */
-     
+
       //最初の一個のagentだけを選択する
       const newDiscussion: Discussion = {
-        id: `${response.agents[0].id}-discussion-${Date.now()}-${Math.random()}`,
+        id: `${
+          response.agents[0].id
+        }-discussion-${Date.now()}-${Math.random()}`,
         title: `${response.agents[0].name} が思考中...`,
         baseDraft: draft,
         comments: [],
@@ -86,9 +89,10 @@ function HomeContainer() {
 
     startPickAgentTransition(async () => {
       const response = await AgentPickerAction({
-        request: "以下の範囲について議論してください。（範囲情報は selectedRange を参照）",
+        request:
+          "以下の範囲について議論してください。（範囲情報は selectedRange を参照）",
         draft,
-        candidate: AgentPoolWithoutManager
+        candidate: AgentPoolWithoutManager,
       });
 
       /*
@@ -111,7 +115,9 @@ function HomeContainer() {
       */
       //最初の一個のagentだけを選択する
       const newDiscussion: Discussion = {
-        id: `${response.agents[0].id}-discussion-${Date.now()}-${Math.random()}`,
+        id: `${
+          response.agents[0].id
+        }-discussion-${Date.now()}-${Math.random()}`,
         title: `${response.agents[0].name} が思考中...`,
         baseDraft: draft,
         comments: [],
@@ -128,10 +134,10 @@ function HomeContainer() {
   }
 
   const handleSetDiscussion = useCallback((newDisc: Discussion) => {
-    setDiscussions(prev => {
-      const oldDisc = prev.find(d => d.id === newDisc.id);
+    setDiscussions((prev) => {
+      const oldDisc = prev.find((d) => d.id === newDisc.id);
       const wasCompleted = oldDisc?.isCompleted;
-      const updated = prev.map(d => d.id === newDisc.id ? newDisc : d);
+      const updated = prev.map((d) => (d.id === newDisc.id ? newDisc : d));
 
       if (newDisc.isCompleted && !wasCompleted) {
         createDraftFromDiscussion(newDisc);
@@ -162,11 +168,7 @@ function HomeContainer() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function Content({
-  onStartDiscussion
-}: {
-  onStartDiscussion: () => void;
-}) {
+function Content({ onStartDiscussion }: { onStartDiscussion: () => void }) {
   return (
     <div style={{ flex: 3 }}>
       <DraftEditor
@@ -203,7 +205,7 @@ export function DiscussionArea({
   discussions,
   setDiscussion,
   handleIdeaInterviewComplete,
-  isPickAgentPending
+  isPickAgentPending,
 }: {
   discussions: Discussion[];
   setDiscussion: (discussion: Discussion) => void;
@@ -214,8 +216,8 @@ export function DiscussionArea({
 
   return (
     <div className={styles.discussion} style={{ flex: 2 }}>
-      <IdeaInterviewPanel 
-        isOpen={isOpen} 
+      <IdeaInterviewPanel
+        isOpen={isOpen}
         setIsOpen={setIsOpen}
         onInterviewComplete={handleIdeaInterviewComplete}
       />
