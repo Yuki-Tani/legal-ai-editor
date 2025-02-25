@@ -1,5 +1,12 @@
-'use client'
-import { useState, useTransition, useEffect, useRef } from "react";
+"use client";
+import {
+  useState,
+  useTransition,
+  useEffect,
+  useRef,
+  useCallback,
+  startTransition,
+} from "react";
 import panelStyles from "./Panel.module.css";
 import TextArea from "./TextArea";
 import Button from "./Button";
@@ -9,32 +16,47 @@ import { useDraftAccessorContext } from "./DraftContext";
 import { AgentIconType } from "./AgentIcon";
 import AgentMessage from "./AgentMessage";
 import Panel from "./Panel";
+import DraftStructuringAction from "@/api/_agent/DraftStructuringAI";
+import { AgentPickerAction } from "@/api/_agent/AgentPicker";
+import { Draft } from "@/types/Draft";
+import { Discussion } from "@/types/Discussion";
+import { AgentPoolWithoutManager, getAgentIconType } from "@/types/Agent";
+import DiscussionPanel from "./DiscussionPanel";
+import { DiscussionAction } from "@/api/Discussion";
 
 export default function IdeaInterviewPanel({
   isOpen,
   setIsOpen,
   onInterviewComplete,
-} : {
-  isOpen: boolean,
-  setIsOpen: (isOpen: boolean) => void,
-  onInterviewComplete?: (requirements: string) => void,
+}: {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  onInterviewComplete?: (requirements: string) => void;
 }) {
   const [draftKind, setDraftKind] = useState("");
   const [isInterviewPending, startInterviewTransition] = useTransition();
 
   const [requirements, setRequirements] = useState<string[]>([]);
+  const [requestText, setRequestText] = useState<string>("");
 
   const [answerText, setAnswerText] = useState("");
   const [answers, setAnswers] = useState<string[]>([]);
 
   const draftAccessor = useDraftAccessorContext();
-  const [isCreatingDraftPending, startCreatingDraftTransition] = useTransition();
+  const [isCreatingDraftPending, startCreatingDraftTransition] =
+    useTransition();
+
+  const [discussion, setDiscussion] = useState<Discussion>();
+  const [isPendingDiscussion, startDiscussionTransition] = useTransition();
 
   const didCallComplete = useRef(false);
 
   async function handleStartInterview() {
     startInterviewTransition(async () => {
-      const response = await IdeaInterviewerAction({ label: "作成する文書の種類", userRequirement: draftKind });
+      const response = await IdeaInterviewerAction({
+        label: "作成する文書の種類",
+        userRequirement: draftKind,
+      });
       setRequirements(response.requirements);
     });
   }
@@ -47,19 +69,68 @@ export default function IdeaInterviewPanel({
     if (answers.length + 1 == requirements.length) {
       startCreatingDraftTransition(async () => {
         const requestText =
-          `作成する文書の種類: ${draftKind}\n` +
-          requirements.map((req, index) => `Q: ${req}\nA: ${answers[index]}`).join("\n");
+          `# 作成する文書の種類\n ${draftKind}\n` +
+          requirements
+            .map((req, index) => `Q: ${req}\nA: ${answers[index]}`)
+            .join("\n");
 
-        const response = await CommonDraftWriterAction([], requestText);
-        draftAccessor.replaceDraft(response);
-        setIsOpen(false);
+        setRequestText(requestText);
+
+        // AIとDiscussion
+
+        setDiscussion({
+          id: "interview",
+          title: "",
+          baseDraft: [],
+          comments: [],
+          commentRequest: null,
+        });
+
+        // const draft_structure_str = await DraftStructuringAction(requestText);
+        // const draft_structure = `# 作成する文書の構造\n
+        //   以下の構造に従ってドラフト文書を作成せよ。
+        //   "${draft_structure_str}"`;
+
+        // const response = await CommonDraftWriterAction([], requestText);
+
+        // draftAccessor.replaceDraft(response);
+        // setIsOpen(false);
       });
     }
   }
 
+  useEffect(() => {
+    if (!discussion) {
+      return;
+    }
+    if (discussion.comments.length <= 3) {
+      startDiscussionTransition(async () => {
+        if (!!discussion) {
+          const newDiscussion = await DiscussionAction(
+            discussion,
+            AgentPoolWithoutManager
+          );
+          setDiscussion(newDiscussion);
+        }
+      });
+    } else {
+      startCreatingDraftTransition(async () => {
+        const response = await CommonDraftWriterAction(
+          [],
+          requestText,
+          discussion
+        );
+        draftAccessor.replaceDraft(response);
+        setIsOpen(false);
+      });
+    }
+  }, [discussion]);
+
   const isRequirementsComplete = requirements.length > 0;
-  const isUserComplete = (isRequirementsComplete && answers.length == requirements.length);
-  const isComplete = isUserComplete && !isCreatingDraftPending;
+  const isUserComplete =
+    isRequirementsComplete && answers.length == requirements.length;
+  const isComplete =
+    isUserComplete && !isCreatingDraftPending && !isPendingDiscussion;
 
   useEffect(() => {
     if (isComplete && !didCallComplete.current) {
@@ -70,7 +141,9 @@ export default function IdeaInterviewPanel({
         setTimeout(() => {
           const requestText =
             `作成する文書の種類: ${draftKind}\n` +
-            requirements.map((req, index) => `Q: ${req}\nA: ${answers[index]}`).join("\n");
+            requirements
+              .map((req, index) => `Q: ${req}\nA: ${answers[index]}`)
+              .join("\n");
           onInterviewComplete(requestText);
         }, 0);
       }
@@ -84,49 +157,72 @@ export default function IdeaInterviewPanel({
       setIsOpen={setIsOpen}
       isComplete={isComplete}
     >
-      { requirements.length == 0 ?
+      {requirements.length == 0 ? (
         <div>
-          <TextArea value={draftKind} onChange={setDraftKind} placeholder="作成する文書の種類を入力"/>
+          <TextArea
+            value={draftKind}
+            onChange={setDraftKind}
+            placeholder="作成する文書の種類を入力"
+          />
           <div className={panelStyles.buttons}>
-            <Button onClick={handleStartInterview} isLoading={isInterviewPending}>
+            <Button
+              onClick={handleStartInterview}
+              isLoading={isInterviewPending}
+              disabled={isInterviewPending || !draftKind}
+            >
               回答
             </Button>
           </div>
         </div>
-        :
+      ) : (
         <div>
-          <p><span style={{fontWeight: 'bold'}}>文書の種類：</span>{draftKind}</p>
+          <p>
+            <span style={{ fontWeight: "bold" }}>文書の種類：</span>
+            {draftKind}
+          </p>
           <hr />
         </div>
-      }
-      { answers.map((answer, index) => (
-          <div key={requirements[index]}>
-            <p style={{ fontWeight: 'bold'}}>Q: {requirements[index]}</p>
-            <p>{answer}</p>
-            <hr />
-          </div>
-        ))
-      }
-      { (isRequirementsComplete && !isUserComplete) &&
+      )}
+      {answers.map((answer, index) => (
+        <div key={requirements[index]}>
+          <AgentMessage
+            agentIconType={AgentIconType.Hearing}
+            agentName={"インタビュアー AI"}
+          >
+            <>{`Q: ${requirements[index]}`}</>
+          </AgentMessage>
+
+          <p>{answer}</p>
+          <hr />
+        </div>
+      ))}
+      {isRequirementsComplete && !isUserComplete && (
         <div>
-          <p style={{ fontWeight: 'bold'}}>Q: {requirements[answers.length]}</p>
+          <AgentMessage
+            agentIconType={AgentIconType.Hearing}
+            agentName={"インタビュアー AI"}
+          >
+            <>{`Q: ${requirements[answers.length]}`}</>
+          </AgentMessage>
           <TextArea value={answerText} onChange={setAnswerText} />
           <div className={panelStyles.buttons}>
-            <Button onClick={handleAnswer}>
-              回答
-            </Button>
+            <Button onClick={handleAnswer}>回答</Button>
           </div>
         </div>
-      }
-      { isUserComplete &&
+      )}
+      {isUserComplete && (
         <AgentMessage
           agentIconType={AgentIconType.Basic}
           agentName={"ドラフト作成 AI"}
         >
-          ドラフトを作成しています...
+          ドラフトの作成を開始します...
         </AgentMessage>
-      }
-      { isComplete &&
+      )}
+      {isUserComplete && !!discussion && (
+        <DiscussionArea discussion={discussion} />
+      )}
+
+      {isComplete && (
         <>
           <hr />
           <AgentMessage
@@ -136,7 +232,37 @@ export default function IdeaInterviewPanel({
             ドラフトを作成しました！
           </AgentMessage>
         </>
-      }
+      )}
     </Panel>
+  );
+}
+
+function DiscussionArea({ discussion }: { discussion: Discussion }) {
+  return (
+    <>
+      {discussion.comments.map((comment) => (
+        <div key={comment.id}>
+          <hr />
+          <AgentMessage
+            key={comment.id}
+            agentIconType={getAgentIconType(comment.agent.id)}
+            agentName={comment.agent.name}
+          >
+            {comment.message}
+          </AgentMessage>
+        </div>
+      ))}
+      {discussion.commentRequest && (
+        <>
+          <hr />
+          <AgentMessage
+            agentIconType={getAgentIconType(discussion.commentRequest.agent.id)}
+            agentName={discussion.commentRequest.agent.name}
+          >
+            が思考中...
+          </AgentMessage>
+        </>
+      )}
+    </>
   );
 }
