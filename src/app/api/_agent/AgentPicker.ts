@@ -104,7 +104,6 @@ ${request.candidate ? JSON.stringify(request.candidate) : JSON.stringify(AgentPo
 ## コメントの種類
 - discuss: 議論を進めるコメント。追加の情報提供や、他のコメントへの反応など。
 - suggest: ここまでの議論をもとに、文書変更の提案を発議するコメント。
-- agree: 現在の提案に対して、賛成かどうかを表明するコメント。誰かが提案を行っている場合には、数名に賛成かどうかを確認するべきである。
 `
     },
   ];

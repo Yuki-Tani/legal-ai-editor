@@ -3,6 +3,7 @@
 import panelStyles from "./Panel.module.css";
 import ExpandCircleDownOutlinedIcon from '@mui/icons-material/ExpandCircleDownOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import { useEffect, useRef } from 'react';
 
 export default function Panel({
   children,
@@ -17,6 +18,15 @@ export default function Panel({
   isOpen?: boolean,
   setIsOpen?: (isOpen: boolean) => void,
 }) {
+
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+    }
+  }, [children, isOpen]);
+
   return (
     <div className={panelStyles.panel} tabIndex={0}>
       <div className={panelStyles.header} onClick={() => setIsOpen?.(!isOpen)}>
@@ -31,7 +41,11 @@ export default function Panel({
             className={`${panelStyles.chevron} ${isOpen ? panelStyles.opened : panelStyles.closed}`}/>
         </button>
       </div>
-      { isOpen && children }
+      { isOpen &&
+        <div style={{ maxHeight: '80vh', overflowY: 'auto', padding: '0 16px 0 0' }} ref={contentRef}>
+          {children}
+        </div>
+      }
     </div>
   );
 }

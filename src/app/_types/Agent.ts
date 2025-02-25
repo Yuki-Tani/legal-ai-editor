@@ -1,5 +1,4 @@
 import { AgentIconType } from "@/components/AgentIcon";
-import { Comment } from "./Discussion";
 
 export type Agent = {
   id: string;
@@ -7,12 +6,20 @@ export type Agent = {
   description: string;
 };
 
+export const ManagerAgent = {
+  id: "manager",
+  name: "管理者",
+  description:
+    "文書作成タスクに対して最終的な決定権限をもつエージェントです。全体的な指針の決定や、重要な決断、選択肢の選択などは、このエージェントが行うべきです。",
+}
+
 export const AgentPool: Agent[] = [
+  ManagerAgent,
   {
-    id: "manager",
-    name: "管理者",
+    id: "moderator",
+    name: "司会",
     description:
-      "文書作成タスクに対して最終的な決定権限をもつエージェントです。全体的な指針の決定や、重要な決断、選択肢の選択などは、このエージェントが行うべきです。",
+      "議論を進行させる司会進行を行うエージェントです。議論の進行や、議論の方向性を決定する役割を担います。",
   },
   {
     id: "basic",
@@ -68,6 +75,8 @@ export function getAgentIconType(agentId: string): AgentIconType {
       return AgentIconType.Basic;
     case "manager":
       return AgentIconType.Manager;
+    case "moderator":
+      return AgentIconType.Basic;
     case "hourei":
       return AgentIconType.Hourei;
     case "keihin-jirei":
@@ -79,7 +88,7 @@ export function getAgentIconType(agentId: string): AgentIconType {
     case "web-research":
       return AgentIconType.WebResearch;
     case "public-comment":
-      AgentIconType.PublicComment;
+      return AgentIconType.PublicComment;
     default:
       return AgentIconType.Basic;
   }

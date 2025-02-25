@@ -54,3 +54,24 @@ const ClaimScheme = z.object({claim: z.object({
   selectedDraft: z.array(DraftElementScheme),
 })});
 export const OpenAIClaimResponseFormat = zodResponseFormat(ClaimScheme, "claim_response");
+
+// === plains ===
+
+const PlainParagraphElementScheme = z.object({
+  type: z.literal("paragraph"),
+  children: z.array(PlainTextScheme),
+}).required();
+
+const PlainHeadingElementScheme = z.object({
+  type: z.literal("heading"),
+  level: z.number().int(),
+  children: z.array(PlainTextScheme),
+}).required();
+
+const PlainDraftElementScheme = z.union([
+  PlainParagraphElementScheme,
+  PlainHeadingElementScheme
+]);
+
+const PlainDraftScheme = z.object({draft: z.array(PlainDraftElementScheme)});
+export const OpenAIPlainDraftResponseFormat = zodResponseFormat(PlainDraftScheme, "draft_response");
