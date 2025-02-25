@@ -12,9 +12,82 @@ import TextArea from "./TextArea";
 import Button from "./Button";
 import panelStyles from "./Panel.module.css";
 
+export default function DiscussionPanel({
+  discussion,
+  setDiscussion,
+  onUserAnswer,
+} : {
+  discussion: Discussion,
+  setDiscussion: (discussion: Discussion) => void,
+  onUserAnswer: (message: string) => Promise<void>,
+}) {
+  const [userInput, setUserInput] = useState("");
+  const [isAnswerPending, startAnswerTransition] = useTransition();
+
+  function handleAnswer() {
+    if (!discussion.commentRequest) return;
+    startAnswerTransition(async () => {
+      await onUserAnswer(userInput);
+      setUserInput("");
+    });
+  }
+
+  return (
+    <Panel
+      title={discussion.title}
+      isOpen={discussion.isActive}
+      setIsOpen={(isOpen) => setDiscussion({ ...discussion, isActive: isOpen })}
+      isComplete={discussion.isCompleted}
+    >
+      { discussion.comments.map((comment) => (
+        <div key={comment.id}>
+          <hr />
+          <AgentMessage
+            key={comment.id}
+            agentIconType={getAgentIconType(comment.agent.id)}
+            agentName={comment.agent.name}
+          >
+            {comment.message}
+          </AgentMessage>
+        </div>
+      ))}
+      { (discussion.commentRequest && discussion.commentRequest.agent.id !== "manager") &&
+        <div>
+          <hr />
+          <AgentMessage
+            agentIconType={getAgentIconType(discussion.commentRequest.agent.id)}
+            agentName={discussion.commentRequest.agent.name}
+          >
+            思考中...
+          </AgentMessage>
+        </div>
+      }
+      { discussion.commentRequest?.agent.id === "manager" &&
+        <div>
+          <hr />
+          <p>
+          {
+            discussion.commentRequest?.type === "discuss" ? "ここまでの議論でなにか意見はありますか？" :
+            discussion.commentRequest?.type === "suggest" ? "なにか提案はありますか？" :
+            discussion.commentRequest?.type === "agree" ? "変更を反映しますか？" :
+            ""
+          }
+          </p>
+          <TextArea value={userInput} onChange={setUserInput} />
+          <div className={panelStyles.buttons}>
+            <Button onClick={handleAnswer} isLoading={isAnswerPending}>
+              回答
+            </Button>
+          </div>
+        </div>
+      }
+    </Panel>
+  )
+}
+
 const MinAgentLoop = 3;
 
-export default function DiscussionPanel({
+export function AutoDiscussionPanel({
   discussion,
   setDiscussion,
 } : {
@@ -78,7 +151,7 @@ export default function DiscussionPanel({
     }
   }, [discussion, isPickAgentPending, isThinkPending, setDiscussion]);
 
-  function handleAnswer() {
+  async function handleAnswer() {
     if (!discussion.commentRequest) return;
     setDiscussion({
       ...discussion,
@@ -94,60 +167,10 @@ export default function DiscussionPanel({
   }
 
   return (
-    <Panel
-      title={discussion.title}
-      isOpen={discussion.isActive}
-      setIsOpen={(isOpen) => setDiscussion({ ...discussion, isActive: isOpen })}
-      isComplete={discussion.isCompleted}
-    >
-      { discussion.comments.map((comment) => (
-        <div key={comment.id}>
-          <hr />
-          <AgentMessage
-            key={comment.id}
-            agentIconType={getAgentIconType(comment.agent.id)}
-            agentName={comment.agent.name}
-          >
-            {comment.message}
-          </AgentMessage>
-        </div>
-      ))}
-      { (discussion.commentRequest && isThinkPending) &&
-        <>
-          <hr />
-          <AgentMessage
-            agentIconType={getAgentIconType(discussion.commentRequest.agent.id)}
-            agentName={discussion.commentRequest.agent.name}
-          >
-            が思考中...
-          </AgentMessage>
-        </> 
-      }
-      { (isPickAgentPending) &&
-        <>
-          <hr/>
-          <div>...</div>
-        </>
-      }
-      { discussion.commentRequest?.agent.id === "manager" &&
-        <div>
-          <hr />
-          <p>
-          {
-            discussion.commentRequest?.type === "discuss" ? "ここまでの議論でなにか意見はありますか？" :
-            discussion.commentRequest?.type === "suggest" ? "なにか提案はありますか？" :
-            discussion.commentRequest?.type === "agree" ? "変更を反映しますか？" :
-            ""
-          }
-          </p>
-          <TextArea value={userInput} onChange={setUserInput} />
-            <div className={panelStyles.buttons}>
-              <Button onClick={handleAnswer}>
-                回答
-              </Button>
-            </div>
-        </div>
-      }
-    </Panel>
+    <DiscussionPanel
+      discussion={discussion}
+      setDiscussion={setDiscussion}
+      onUserAnswer={handleAnswer}
+    />
   );
 }
