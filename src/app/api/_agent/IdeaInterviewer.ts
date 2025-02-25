@@ -4,26 +4,35 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod";
-import { IdeaInterviewerResponseScheme, IdeaInterviewerRequest, IdeaInterviewerResponse } from "./IdeaInterviewerTypes";
-
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
 });
 
+const IdeaInterviewerResponseScheme = z.object({
+  requirements: z.array(z.string()),
+});
+
+type IdeaInterviewerRequest = {
+  request: string;
+};
+
+type IdeaInterviewerResponse = {
+  requirements: string[];
+};
+
 const IdeaInterviewerResponseFormat = zodResponseFormat(IdeaInterviewerResponseScheme, "requirement_list");
 
 export default async function IdeaInterviewerAction(request: IdeaInterviewerRequest): Promise<IdeaInterviewerResponse> {
-  console.log(request);
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     {
       role: "system",
       content:
-        "ユーザから要求された文章のドラフトを作成するために最低限必要な情報のリストを優先度が高い順に最大2個までリストアップしてください。リストアップする内容はできるだけ一般的な内容にしてください。回答しなくてもドラフトが書ける場合はリストアップしないでください。リストアップした項目はそれぞれユーザへの質問文の形に変換してください。",
+        "管理者が作成したいドラフトを作成するために最低限必要な情報のリストを優先度が高い順に最大2個までリストアップしてください。リストアップする内容はできるだけ一般的な内容にしてください。回答しなくてもドラフトが書ける場合はリストアップしないでください。リストアップした項目はそれぞれ管理者への質問文の形に変換してください。",
     },
     {
       role: "user",
-      content: `${request.label}:\n${request.userRequirement}`,
+      content: request.request,
     },
   ];
 

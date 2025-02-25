@@ -1,11 +1,11 @@
 
 'use client'
 
-import { AgentPool, getAgentIconType } from "@/types/Agent";
+import { Agent, AgentPool, getAgentIconType, ManagerAgent } from "@/types/Agent";
 import AgentMessage from "./AgentMessage";
 import Panel from "./Panel";
-import { Discussion } from "@/types/Discussion";
-import { useEffect, useState, useTransition } from "react";
+import { Comment, CommentRequest, CommentType, Discussion } from "@/types/Discussion";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { AgentAction } from "@/api/_agent/AgentPool";
 import { NextCommentorPickerAction } from "@/api/_agent/AgentPicker";
 import TextArea from "./TextArea";
@@ -15,11 +15,9 @@ import panelStyles from "./Panel.module.css";
 export default function DiscussionPanel({
   discussion,
   setDiscussion,
-  onUserAnswer,
 } : {
   discussion: Discussion,
   setDiscussion: (discussion: Discussion) => void,
-  onUserAnswer: (message: string) => Promise<void>,
 }) {
   const [userInput, setUserInput] = useState("");
   const [isAnswerPending, startAnswerTransition] = useTransition();
@@ -27,7 +25,16 @@ export default function DiscussionPanel({
   function handleAnswer() {
     if (!discussion.commentRequest) return;
     startAnswerTransition(async () => {
-      await onUserAnswer(userInput);
+      setDiscussion({
+        ...discussion,
+        comments: [...discussion.comments, {
+          id: `manager-${discussion.comments.length}`,
+          agent: ManagerAgent,
+          type: "discuss",
+          message: userInput,
+        }],
+        commentRequest: null,
+      });
       setUserInput("");
     });
   }
@@ -62,27 +69,84 @@ export default function DiscussionPanel({
           </AgentMessage>
         </div>
       }
-      { discussion.commentRequest?.agent.id === "manager" &&
+      { discussion.commentRequest && discussion.commentRequest.agent.id === "manager" &&
         <div>
           <hr />
-          <p>
-          {
-            discussion.commentRequest?.type === "discuss" ? "ここまでの議論でなにか意見はありますか？" :
-            discussion.commentRequest?.type === "suggest" ? "なにか提案はありますか？" :
-            discussion.commentRequest?.type === "agree" ? "変更を反映しますか？" :
-            ""
-          }
-          </p>
           <TextArea value={userInput} onChange={setUserInput} />
           <div className={panelStyles.buttons}>
             <Button onClick={handleAnswer} isLoading={isAnswerPending}>
-              回答
+              送信
             </Button>
           </div>
         </div>
       }
     </Panel>
   )
+}
+
+export function useDiscussion(
+  initialDiscussion: Discussion,
+  pickAgent: (discussion: Discussion, lastComment?: Comment) => Promise<{ agent: Agent, expectedCommentType?: CommentType } | undefined>,
+  invokeAgent: (discussion: Discussion, request: CommentRequest) => Promise<Comment | string | undefined>,
+) : [Discussion, /*setDiscussion*/(discussion: Discussion) => void, /*isPickAgentPending*/boolean, /*isInvokeAgentPending*/boolean]
+{
+  const [discussion, setDiscussion] = useState<Discussion>(initialDiscussion);
+  const [isPickAgentPending, startPickAgentTransition] = useTransition();
+  const [isInvokeAgentPending, startInvokeAgentTransition] = useTransition();
+
+  useEffect(() => {
+    if (!discussion.isActive || discussion.isCompleted) { return; }
+
+    if (!discussion.commentRequest)
+    {
+      startPickAgentTransition(async () => {
+        const next = await pickAgent(
+          discussion,
+          discussion.comments[discussion.comments.length - 1]
+        );
+        if (next)
+        {
+          setDiscussion({
+            ...discussion,
+            commentRequest: {
+              id: `comment-${discussion.comments.length}`,
+              agent: next.agent,
+              type: next.expectedCommentType,
+            },
+          });
+        }
+      });
+    }
+    if (discussion.commentRequest) {
+      const request = discussion.commentRequest;
+      startInvokeAgentTransition(async () => {
+        const comment = await invokeAgent(discussion, request);
+        if (comment && discussion.commentRequest?.id === request.id)
+        {
+          if (typeof comment === "string") {
+            setDiscussion({
+              ...discussion,
+              comments: [...discussion.comments, {
+                id: request.id,
+                agent: request.agent,
+                type: request.type ?? "discuss",
+                message: comment,
+              }],
+              commentRequest: null,
+            });
+          } else {
+            setDiscussion({
+              ...discussion,
+              comments: [...discussion.comments, comment],
+              commentRequest: null,
+            });
+          }
+        }
+      });
+    }
+  }, [discussion, pickAgent, invokeAgent]);
+
+  return [discussion, setDiscussion, isPickAgentPending, isInvokeAgentPending] as const;
 }
 
 const MinAgentLoop = 3;
@@ -96,8 +160,6 @@ export function AutoDiscussionPanel({
 }) {
   const [isThinkPending, startThinkTransition] = useTransition();
   const [isPickAgentPending, startPickAgentTransition] = useTransition();
-
-  const [userInput, setUserInput] = useState("");
 
   useEffect(() => {
     if (!discussion.isActive || discussion.isCompleted || isThinkPending || isPickAgentPending) { return; }
@@ -151,26 +213,10 @@ export function AutoDiscussionPanel({
     }
   }, [discussion, isPickAgentPending, isThinkPending, setDiscussion]);
 
-  async function handleAnswer() {
-    if (!discussion.commentRequest) return;
-    setDiscussion({
-      ...discussion,
-      comments: [...discussion.comments, {
-        id: `manager-${discussion.comments.length}`,
-        agent: discussion.commentRequest!.agent,
-        type: discussion.commentRequest!.type!,
-        message: userInput,
-      }],
-      commentRequest: null,
-    });
-    setUserInput("");
-  }
-
   return (
     <DiscussionPanel
       discussion={discussion}
       setDiscussion={setDiscussion}
-      onUserAnswer={handleAnswer}
     />
   );
 }

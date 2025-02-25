@@ -24,7 +24,7 @@ export default function AgentIcon({
   size?: number;
   style?: React.CSSProperties;
 }) {
-  var src = "/icon-basic-ai.png";
+  let src = "/icon-basic-ai.png";
   switch (agentIconType) {
     case AgentIconType.Basic:
       src = "/icon-basic-ai.png";
@@ -56,7 +56,7 @@ export default function AgentIcon({
   }
 
   if (agentIconType === AgentIconType.Manager) {
-    return <AccountCircleIcon />;
+    return <AccountCircleIcon style={{width: size ?? defaultIconSize, height: size ?? defaultIconSize}}/>;
   }
 
   return (
