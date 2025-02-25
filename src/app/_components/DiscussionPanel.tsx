@@ -1,13 +1,11 @@
 
 'use client'
 
-import { Agent, AgentPool, getAgentIconType, ManagerAgent } from "@/types/Agent";
+import { Agent, getAgentIconType, ManagerAgent } from "@/types/Agent";
 import AgentMessage from "./AgentMessage";
 import Panel from "./Panel";
 import { Comment, CommentRequest, CommentType, Discussion } from "@/types/Discussion";
-import { useCallback, useEffect, useState, useTransition } from "react";
-import { AgentAction } from "@/api/_agent/AgentPool";
-import { NextCommentorPickerAction } from "@/api/_agent/AgentPicker";
+import { useEffect, useState, useTransition } from "react";
 import TextArea from "./TextArea";
 import Button from "./Button";
 import panelStyles from "./Panel.module.css";
@@ -39,6 +37,23 @@ export default function DiscussionPanel({
     });
   }
 
+  function handleApply(comment: Comment) {
+    if (!discussion.commentRequest) return;
+    startAnswerTransition(async () => {
+      setDiscussion({
+        ...discussion,
+        comments: [...discussion.comments, {
+          id: `manager-${discussion.comments.length}`,
+          agent: ManagerAgent,
+          type: "agree",
+          message: `${comment.agent.name} の提案にしたがって、ドラフトを更新します。`,
+          draft: comment.draft,
+        }],
+        commentRequest: null,
+      });
+    });
+  }
+
   return (
     <Panel
       title={discussion.title}
@@ -56,6 +71,14 @@ export default function DiscussionPanel({
           >
             {comment.message}
           </AgentMessage>
+          { 
+            (comment.type === "suggest") &&
+            <div className={panelStyles.buttons}>
+              <Button onClick={() => handleApply(comment)} isLoading={isAnswerPending} disabled={discussion.commentRequest?.agent.id !== "manager"}>
+                この変更を適用する
+              </Button>
+            </div>
+          }
         </div>
       ))}
       { (discussion.commentRequest && discussion.commentRequest.agent.id !== "manager") &&
@@ -147,76 +170,4 @@ export function useDiscussion(
   }, [discussion, pickAgent, invokeAgent]);
 
   return [discussion, setDiscussion, isPickAgentPending, isInvokeAgentPending] as const;
-}
-
-const MinAgentLoop = 3;
-
-export function AutoDiscussionPanel({
-  discussion,
-  setDiscussion,
-} : {
-  discussion: Discussion,
-  setDiscussion: (discussion: Discussion) => void,
-}) {
-  const [isThinkPending, startThinkTransition] = useTransition();
-  const [isPickAgentPending, startPickAgentTransition] = useTransition();
-
-  useEffect(() => {
-    if (!discussion.isActive || discussion.isCompleted || isThinkPending || isPickAgentPending) { return; }
-
-    // とりあえず、暴走を防ぐため上限を設ける
-    if (discussion.comments.length > 10) {
-      setDiscussion({ ...discussion, isCompleted: true });
-      return;
-    }
-    if (discussion.commentRequest && discussion.commentRequest.agent.id !== "manager") {
-      // commentRequest がある場合は、エージェントを動かす
-      startThinkTransition(async () => {
-        console.log("request agent action");
-        const comments = await AgentAction(discussion);
-        //　複数のコメントが返ってくる場合は、一つずつ処理する
-        for (const comment of comments) {
-          setDiscussion({
-            ...discussion,
-            comments: [...discussion.comments, comment],
-            commentRequest: null,
-          });
-        }
-      });
-    }
-    if (!discussion.commentRequest)
-    {
-      // commentRequest がない場合は、次の発話エージェントを選択する
-      startPickAgentTransition(async () => {
-        const candidate = AgentPool.filter(agent =>
-          ((discussion.comments.length > MinAgentLoop) ? agent.id !== "" : agent.id !== "manager") && // 最初の数回は manager を選ばない
-          discussion.comments[discussion.comments.length - 1]?.agent.id !== agent.id // 直前のエージェントと同じエージェントは選ばない
-        );
-
-        // もし candidate が空 => もう誰も発話できない => 終了
-        if (candidate.length === 0) {
-          console.log("No more candidate. Discussion ends.");
-          setDiscussion({ ...discussion, isCompleted: true });
-          return;
-        }
-
-        const response = await NextCommentorPickerAction({discussion, candidate});
-        setDiscussion({
-          ...discussion,
-          commentRequest: {
-            id: `${response.agent.id}-${discussion.comments.length}`,
-            agent: response.agent,
-            type: response.expectedCommentType
-          },
-        })
-      });
-    }
-  }, [discussion, isPickAgentPending, isThinkPending, setDiscussion]);
-
-  return (
-    <DiscussionPanel
-      discussion={discussion}
-      setDiscussion={setDiscussion}
-    />
-  );
 }
