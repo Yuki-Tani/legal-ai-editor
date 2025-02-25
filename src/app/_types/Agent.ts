@@ -16,16 +16,10 @@ export const ManagerAgent = {
 export const AgentPool: Agent[] = [
   ManagerAgent,
   {
-    id: "moderator",
-    name: "司会",
-    description:
-      "議論を進行させる司会進行を行うエージェントです。議論の進行や、議論の方向性を決定する役割を担います。",
-  },
-  {
     id: "basic",
     name: "一般的な知識を持つ AI",
     description:
-      "広く浅い一般知識を持つエージェントです。法律の専門知識は持ちませんが、素早く返答を行うことができます。",
+      "広く浅い一般知識を持つエージェントです。法律の専門知識は持ちませんが、素早く返答を行うことができます。大抵の場合、最初にこのエージェントに意見を仰ぐことで議論がうまく進みます。",
   },
   {
     id: "hourei",

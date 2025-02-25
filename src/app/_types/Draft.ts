@@ -1,4 +1,4 @@
-import { Editor, Selection, Text, Transforms, Range } from "slate"
+import { Editor, Selection, Text, Transforms, Range, Path } from "slate"
 import { ReactEditor } from "slate-react";
 
 ////////////////////////////////////////
@@ -107,14 +107,62 @@ export class DraftAccessor {
     }
   }
 
-  public getSelectedText(): string {
-    const range = this.getCurrentRange();
-    if (!range) return "";
-    try {
-      return Editor.string(this.editor, range);
-    } catch (error) {
-      console.error("Failed to get selected text:", error);
-      return "";
+  public getSelectedText(): string[] {
+    const nodes = Editor.nodes(this.editor, {
+      match: n => Text.isText(n) && 'selected' in n,
+    });
+    return Array.from(nodes).map(([node]) => node.text);
+  }
+
+  public removeAllMarks(): void {
+    for (const [node, path] of Editor.nodes(this.editor, {
+      at: [],
+      match: n => Text.isText(n) && ('selected' in n || 'suggested' in n),
+    })) {
+      if ('selected' in node) {
+        Transforms.unsetNodes(this.editor, 'selected', { at: path });
+      }
+      if ('suggested' in node) {
+        Transforms.unsetNodes(this.editor, 'suggested', { at: path });
+        Transforms.unsetNodes(this.editor, 'suggestion', { at: path });
+      }
+    }
+  }
+
+  public createSuggestion(updaters: { from: string, to: string}[]): void {
+    this.removeAllMarks()
+    for (const { from, to } of updaters)
+    {
+      for (const [node, path] of Editor.nodes(this.editor, {
+        at: [],
+        match: Text.isText,
+      })) {
+        const { text } = node;
+        let index = text.indexOf(from);
+        
+        const targetPath = [...path]
+
+        while (index !== -1) {
+          if (index > 0) {
+            Transforms.splitNodes(this.editor, { at: { path: targetPath, offset: index } });
+            targetPath[targetPath.length - 1] += 1
+          }
+          
+          Transforms.splitNodes(this.editor, { at: { path: targetPath, offset: from.length } });
+          Transforms.setNodes(this.editor, { suggested: true, suggestion: to }, { at: targetPath });
+          index = text.indexOf(from, index + from.length);
+        }
+      }
+    }
+  }
+
+  public applySuggestion(): void {
+    for (const [node, path] of Editor.nodes(this.editor, {
+      at: [],
+      match: n => Text.isText(n) && 'suggested' in n,
+    })) {
+      const { suggestion } = node;
+      Transforms.setNodes(this.editor, { text: suggestion }, { at: path });
     }
   }
 }
