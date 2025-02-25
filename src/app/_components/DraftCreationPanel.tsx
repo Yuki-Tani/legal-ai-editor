@@ -33,7 +33,7 @@ const initialDiscussion: Discussion = {
   isActive: true,
 };
 
-export default function IdeaInterviewPanel() {
+export default function DraftCreationPanel() {
   const draftAccessor = useDraftAccessorContext();
   const draftAiQuestions = useRef<{ id: string, question: string }[]>([]);
 
