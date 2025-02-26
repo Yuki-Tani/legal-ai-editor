@@ -17,7 +17,7 @@ export default async function CommonDraftWriterAction(
     let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     const systemMessage = `
 # 命令
-あなたはユーザーの提供する情報に基づいて、法律に関係する文書を作成するアシスタントである。以下の情報をもとに、法律に関係する文書のドラフトを作成せよ。
+あなたはユーザーの提供する情報に基づいて、法律に関係する文書を作成するアシスタントである。以下の情報をもとに、法律に関係する文書のドラフトをなるべく非常に詳細で丁寧に作成せよ。
 作成する前に、<thinking></thinking>内で以下のことについて熟考せよ。
 1. 文書に必要となる見出しを、読書が理解しやすい順番かつ階層を整理する。
 2. 作成した見出しに沿って、ドラフトを作成する。

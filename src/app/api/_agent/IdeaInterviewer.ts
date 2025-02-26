@@ -39,7 +39,7 @@ export default async function IdeaInterviewerAction(request: IdeaInterviewerRequ
   console.log(messages);
   try {
     const completion = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       response_format: IdeaInterviewerResponseFormat,
       messages,
     });

@@ -26,7 +26,7 @@ async function getChatJson(
 ): Promise<string> {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       response_format: { type: "json_schema", json_schema: schema },
       messages,
     });
@@ -44,7 +44,7 @@ async function getChatCompletion(
 ): Promise<string> {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages,
     });
     return completion.choices[0]?.message?.content ?? fallback;
@@ -113,9 +113,9 @@ async function doRequestComment(
   comments: Array<{ author: string; content: string }>,
   prevState: AgentState
 ): Promise<AgentState> {
-  let systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、ユーザとのやりとりが与えられます。ユーザとのやりとりの流れに従って200文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
+  let systemMessage = `以下のアイデアと要件、法律文書のドラフト全体と選択されたドラフトの一部に関して、これまでの会話が与えられます。会話の流れに従って500文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}\n\n法律文書のドラフト全体：${draft}\n\n選択されたドラフトの一部の文章；${selectedText}`;
   if (selectedText == "" && draft == "") {
-    systemMessage = `以下のアイデアと要件、ユーザとのやりとりが与えられます。ユーザとのやりとりの流れに従って200文字以内で新しいコメントを考えてください。回答は新しいコメントだけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}`;
+    systemMessage = `以下に法律文書のアイデアと要件、これまでの会話が与えられます。会話の流れに従って500文字以内で詳細で具体的で法律文書作成のために建設的なコメントを考えてください。もし必要な場合は複数の具体例やPros/Cons、他に検討すべき事項、調査すべき項目など回答に入れて下さい。回答は新しいコメントだけを返すようにしてください。他の文字列を含まないでください。\n\nアイデアと要件:\n${coreIdea}`;
   }
 
   const msg: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
