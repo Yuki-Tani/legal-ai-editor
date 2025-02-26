@@ -20,7 +20,7 @@ const fallbackMessages: Record<AgentRequestType, string> = {
 async function getRoleList(draft: string): Promise<Array<{ role: string; description: string }>> {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -82,13 +82,12 @@ async function getRoleOpinion(
 関心事：${description}
 
 以下の点に注目して、150文字程度で意見を述べてください：
-- この立場の人間がアイデアと要件にどのように関連するか・影響を受けるか。
-- この立場の人間が持っている専門的な知識や経験
-- この立場の人がおすすめする参考文献や情報源
-- この立場特有の懸念事項
-- この立場の期待する結果とその理由
-- 改善が必要な箇所
-- 特に評価できる点`,
+- この立場の人間がアイデアと要件にどのように関連するか・影響を受けるか、具体的事例を含めて説明する
+- この立場の人間が持っている専門的な知識を提示して、その知識がアイデアと要件にどのように影響するか説明する
+- この立場特有の懸念事項があれば、それについても述べる
+- この立場の期待する法律文書の方向性と、避けたい方向性について述べる
+- 改善が必要な箇所があれば、それについても述べる
+- 特に評価できる点があれば、それについても述べる`,
         },
         {
           role: "user",
