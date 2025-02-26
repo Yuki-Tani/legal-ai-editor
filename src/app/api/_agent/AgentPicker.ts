@@ -50,7 +50,7 @@ ${request.candidate ? JSON.stringify(request.candidate) : JSON.stringify(AgentPo
   console.log(messages);
   try {
     const completion = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       response_format: AgentPickerResponseFormat,
       messages,
     });
@@ -111,7 +111,7 @@ ${request.candidate ? JSON.stringify(request.candidate) : JSON.stringify(AgentPo
   console.log(messages);
   try {
     const completion = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       response_format: NextCommentorPickerResponseFormat,
       messages,
     });

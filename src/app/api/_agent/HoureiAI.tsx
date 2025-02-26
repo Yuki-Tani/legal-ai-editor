@@ -52,7 +52,7 @@ async function getChatCompletion(
 ): Promise<string> {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages,
     });
     return completion.choices[0]?.message?.content ?? fallback;
@@ -83,7 +83,7 @@ async function doRequestCommentHorei(
   let systemMessage = `法律文章についてのアイデアと要件、ユーザーの文章、関連する法令、ユーザとのやりとりが与えられます。以下の法令から条文を1つ引用して500文字以内で修正提案コメントを考えてください。回答はコメントと関連する法令の条文のみを返信してください。
   アイデアと要件；${coreIdea}\n\nユーザーの文章；${searchText}\n\n法令の条文：${searchResults}`;
   if (searchText == coreIdea) {
-    systemMessage = `法律文章についてのアイデアと要件、関連するかもしれない法令、ユーザとのやりとりが与えられます。以下の特に法令から関連する条文をいくつかそのまま引用して、500文字以内でアイデアと要件に合う法律文章作成のためのアイデアやコメントを考えてください。回答はコメントと関連する法令の条文のみを返信してください。
+    systemMessage = `法律文章についてのアイデアと要件、関連するかもしれない法令、ユーザとのやりとりが与えられます。以下の特に法令から関連する条文をいくつかそのまま引用して、500文字以内でアイデアと要件に合う法律文章作成のためのコメントを考えてください。回答はコメントと関連する法令の条文のみを返信してください。
 アイデアと要件；${coreIdea}\n\n法令の条文：${searchResults}`;
   }
 

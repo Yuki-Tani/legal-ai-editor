@@ -26,7 +26,7 @@ async function getChatJson(
 ): Promise<string> {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       response_format: { type: "json_schema", json_schema: schema },
       messages,
     });
@@ -44,7 +44,7 @@ async function getChatCompletion(
 ): Promise<string> {
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages,
     });
     return completion.choices[0]?.message?.content ?? fallback;
