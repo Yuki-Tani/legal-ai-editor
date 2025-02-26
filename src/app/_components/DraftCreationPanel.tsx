@@ -45,7 +45,6 @@ export default function DraftCreationPanel() {
 
   const pickAgent = useCallback(
     async (discussion: Discussion, lastComment?: Comment) => {
-      // Agent の選択ロジック
       if (draftAiQuestions.current.some((q) => lastComment?.id === q.id)) {
         return { agent: ManagerAgent };
       }
@@ -55,7 +54,6 @@ export default function DraftCreationPanel() {
       if (!discussion.comments.some((c) => c.id === "start-asking-ais")) {
         return { agent: DraftWriter };
       }
-      // ２回に１回は DraftWriter が発話する
       if (
         discussion.comments.at(-1)?.agent.id !== DraftWriter.id &&
         discussion.comments.at(-2)?.agent.id !== DraftWriter.id
