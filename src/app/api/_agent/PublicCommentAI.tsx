@@ -37,7 +37,7 @@ async function getRoleList(draft: string): Promise<Array<{ role: string; descrip
   ]
 }
 
-最大5つの重要な役割を特定してください。
+最大3つの重要な役割を特定してください。
 必ず有効なJSONのみを出力してください。余計なテキストは含めないでください。`,
         },
         {
