@@ -72,10 +72,21 @@ async function doRequestCommentKinousei(
   coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
-  const searchResults = await callFlaskGetContext(selectedText || draft);
-  console.log(searchResults);
-  const systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する機能性食品、ユーザとのやりとりが与えられます。以下の機能性食品からユーザーの文章と関連するものを１つ以上引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した機能性食品を詳細で具体的に説明した文章を含むコメントのみを返信してください。
+  let searchText;
+  if (selectedText != "") {
+    searchText = selectedText;
+  } else if (draft != "" && draft != "[]" && draft != "{}") {
+    searchText = draft;
+  } else {
+    searchText = coreIdea;
+  }
+  const searchResults = await callFlaskGetContext(searchText);
+  let systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する機能性食品、ユーザとのやりとりが与えられます。以下の機能性食品からユーザーの文章と関連するものを１つ以上引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した機能性食品を詳細で具体的に説明した文章を含むコメントのみを返信してください。
   アイデアと要件；${coreIdea}\n\n文章；${selectedText}\n\n機能性食品：${searchResults}`;
+  if (searchText == coreIdea) {
+    systemMessage = `法律文章についてのアイデアと要件、関連する機能性食品、ユーザとのやりとりが与えられます。以下の機能性食品からユーザーの文章と関連するものを１つ以上引用して、500文字以内でアイデアと要件に合う法律文章作成のためのコメントを考えてください。回答には引用した機能性食品を詳細で具体的に説明した文章を含むコメントのみを返信してください。
+  アイデアと要件；${coreIdea}\n\n機能性食品：${searchResults}`;
+  }
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemMessage },

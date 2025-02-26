@@ -43,11 +43,19 @@ async function callFlaskGeminiSearch(text: string): Promise<string> {
 
 async function doRequestCommentResearch(
   prevState: AgentState,
+  coreIdea: string,
   selectedText: string,
   draft: string
 ): Promise<AgentState> {
-  const text = selectedText === "" ? draft : selectedText;
-  const searchResult = await callFlaskGeminiSearch(text);
+  let searchText;
+  if (selectedText != "") {
+    searchText = selectedText;
+  } else if (draft != "" && draft != "[]" && draft != "{}") {
+    searchText = draft;
+  } else {
+    searchText = coreIdea;
+  }
+  const searchResult = await callFlaskGeminiSearch(searchText);
   return {
     type: "commenting",
     answer: searchResult,
@@ -72,7 +80,8 @@ export async function RequestAction(
     const request = arg2;
     if (request.type === "requestComment") {
       const { text: selectedText } = request.selection;
-      return await doRequestCommentResearch(prevState, selectedText, request.draft);
+      const coreIdea = request.coreIdea;
+      return await doRequestCommentResearch(prevState, coreIdea, selectedText, request.draft);
     }
     return prevState;
   }
@@ -91,9 +100,10 @@ export async function RequestAction(
   const selectedText = discussion.selectedText || "";
   const draftStr = JSON.stringify(discussion.baseDraft);
   const prevState: AgentState = { ...initalAgentState };
+  const coreIdea = discussion.requirements || "";
 
   if (mapped === "requestComment") {
-    return await doRequestCommentResearch(prevState, selectedText, draftStr);
+    return await doRequestCommentResearch(prevState, coreIdea, selectedText, draftStr);
   } else if (mapped === "requestOpinion") {
     return {
       type: "answering",

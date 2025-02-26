@@ -69,9 +69,23 @@ async function doRequestCommentHorei(
   coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
-  const searchResults = await callFlaskGetContext(selectedText || draft);
-  const systemMessage = `法律文章についてのアイデアと要件、ユーザーの文章、関連する法令、ユーザとのやりとりが与えられます。以下の法令から条文を1つ引用して500文字以内で修正提案コメントを考えてください。回答はコメントと関連する法令の条文のみを返信してください。
-アイデアと要件；${coreIdea}\n\nユーザーの文章；${selectedText}\n\n法令の条文：${searchResults}`;
+  let searchText;
+  if (selectedText != "") {
+    searchText = selectedText;
+  } else if (draft != "" && draft != "[]" && draft != "{}") {
+    searchText = draft;
+  } else {
+    searchText = coreIdea;
+  }
+  console.log("searchText");
+  console.log(searchText);
+  const searchResults = await callFlaskGetContext(searchText);
+  let systemMessage = `法律文章についてのアイデアと要件、ユーザーの文章、関連する法令、ユーザとのやりとりが与えられます。以下の法令から条文を1つ引用して500文字以内で修正提案コメントを考えてください。回答はコメントと関連する法令の条文のみを返信してください。
+  アイデアと要件；${coreIdea}\n\nユーザーの文章；${searchText}\n\n法令の条文：${searchResults}`;
+  if (searchText == coreIdea) {
+    systemMessage = `法律文章についてのアイデアと要件、関連するかもしれない法令、ユーザとのやりとりが与えられます。以下の特に法令から関連する条文をいくつかそのまま引用して、500文字以内でアイデアと要件に合う法律文章作成のためのアイデアやコメントを考えてください。回答はコメントと関連する法令の条文のみを返信してください。
+アイデアと要件；${coreIdea}\n\n法令の条文：${searchResults}`;
+  }
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemMessage },
@@ -133,6 +147,8 @@ export async function RequestAction(
 
   if (mapped === "requestComment") {
     const coreIdea = discussion.requirements || "";
+    console.log("coreIdea");
+    console.log(coreIdea);
     const comments = discussion.comments.map((c) => ({ author: c.agent.id === "manager" ? "user" : "assistant", content: c.message }));
     return await doRequestCommentHorei(prevState, selectedText, draftStr, coreIdea, comments);
   } else if (mapped === "requestOpinion") {

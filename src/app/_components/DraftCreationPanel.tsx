@@ -89,6 +89,7 @@ export default function DraftCreationPanel() {
         return { id: question.id, agent: DraftWriter, message: question.question, type: "discuss" } as Comment;
       }
       if (!discussion.comments.some(c => c.id === "start-asking-ais")) {
+        discussion.requirements = discussion.comments.map(c => c.message).join("\n");
         return { id: "start-asking-ais", agent: DraftWriter, message: "このドラフトを作成するのに必要な情報を、専門家 AI は提供してください。", type: "discuss" } as Comment;
       }
       if (!discussion.comments.some(c => c.id === "ask-common-people")) {
