@@ -78,7 +78,7 @@ export function DiscussionArea({ discussionIds }: { discussionIds: string[] }) {
     <div className={styles.discussion} style={{ flex: 2 }}>
       <DraftCreationPanel />
       {discussionIds.map((discussionId) => (
-        <DraftUpdatePanel key={discussionId} />
+        <DraftUpdatePanel discussionId={discussionId} />
       ))}
     </div>
   );

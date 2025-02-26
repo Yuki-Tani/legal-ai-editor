@@ -72,12 +72,19 @@ async function doRequestCommentTokutei(
   coreIdea: string,
   comments: Array<{ author: string; content: string }>
 ): Promise<AgentState> {
-  let searchText = selectedText || draft || coreIdea;
+  let searchText;
+  if (selectedText != "") {
+    searchText = selectedText;
+  } else if (draft != "" && draft != "[]" && draft != "{}") {
+    searchText = draft;
+  } else {
+    searchText = coreIdea;
+  }
   const searchResults = await callFlaskGetContext(searchText);
   let systemMessage = `法律文章についてのアイデアと要件、それによって生成された文章、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。
   アイデアと要件；${coreIdea}\n\n文章；${selectedText}\n\n特定商取引法違反執行事例：${searchResults}`;
   if (searchText == coreIdea) {
-    systemMessage = `法律文章についてのアイデアと要件、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して500文字以内で文章についての修正提案コメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。
+    systemMessage = `法律文章についてのアイデアと要件、関連する特定商取引法違反執行事例、ユーザとのやりとりが与えられます。以下の特定商取引法違反執行事例からユーザーの文章と関連するものを１つ引用して、500文字以内でアイデアと要件に合う法律文章作成のためのコメントを考えてください。回答には引用した特定商取引法違反執行事例を具体的・詳細に要約した文章を含むコメントのみを返信してください。
   アイデアと要件；${coreIdea}\n\n特定商取引法違反執行事例：${searchResults}`;
   }
 

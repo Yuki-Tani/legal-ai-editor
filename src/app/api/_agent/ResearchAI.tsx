@@ -47,8 +47,15 @@ async function doRequestCommentResearch(
   selectedText: string,
   draft: string
 ): Promise<AgentState> {
-  const text = selectedText || draft || coreIdea;
-  const searchResult = await callFlaskGeminiSearch(text);
+  let searchText;
+  if (selectedText != "") {
+    searchText = selectedText;
+  } else if (draft != "" && draft != "[]" && draft != "{}") {
+    searchText = draft;
+  } else {
+    searchText = coreIdea;
+  }
+  const searchResult = await callFlaskGeminiSearch(searchText);
   return {
     type: "commenting",
     answer: searchResult,

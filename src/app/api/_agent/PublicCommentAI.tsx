@@ -88,7 +88,7 @@ async function getRoleOpinion(
         },
         {
           role: "user",
-          content: `アイデアと要件:\n${coreIdea}\n\n法律文書のドラフト：\n${draft}`,
+          content: `アイデアと要件:\n${coreIdea}\n\n法律文書のドラフト(任意）：\n${draft}`,
         },
       ],
     });
@@ -105,7 +105,11 @@ async function doRequestOpinionOrCommentPublic(
   draft: string,
   coreIdea: string
 ): Promise<AgentState> {
-  const roles = await getRoleList(draft);
+  let text = draft;
+  if (text === "" || text === "[]" || text === "{}") {
+    text = coreIdea;
+  }
+  const roles = await getRoleList(text);
   if (!roles || roles.length === 0) {
     return {
       type: "commenting",
