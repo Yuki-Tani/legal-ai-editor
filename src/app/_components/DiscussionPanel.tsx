@@ -47,7 +47,6 @@ export default function DiscussionPanel({
           agent: ManagerAgent,
           type: "agree",
           message: `${comment.agent.name} の提案にしたがって、ドラフトを更新します。`,
-          draft: comment.draft,
         }],
         commentRequest: null,
       });

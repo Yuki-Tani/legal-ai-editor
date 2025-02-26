@@ -113,6 +113,7 @@ export default function DraftCreationPanel() {
     setDiscussion({
       ...discussion,
       isCompleted: true,
+      isActive: false,
     });
   }
 

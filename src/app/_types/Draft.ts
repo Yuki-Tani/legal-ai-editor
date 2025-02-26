@@ -135,22 +135,19 @@ export class DraftAccessor {
     {
       for (const [node, path] of Editor.nodes(this.editor, {
         at: [],
-        match: Text.isText,
+        match: n => Text.isText(n),
       })) {
-        const { text } = node;
-        let index = text.indexOf(from);
+        if ((Editor.parent(this.editor, path)[0] as DraftElement).type !== 'paragraph')
+        {
+          continue; // TORIAEZU: paragraph 以外は無視
+        }
         
-        const targetPath = [...path]
-
-        while (index !== -1) {
-          if (index > 0) {
-            Transforms.splitNodes(this.editor, { at: { path: targetPath, offset: index } });
-            targetPath[targetPath.length - 1] += 1
-          }
-          
-          Transforms.splitNodes(this.editor, { at: { path: targetPath, offset: from.length } });
-          Transforms.setNodes(this.editor, { suggested: true, suggestion: to }, { at: targetPath });
-          index = text.indexOf(from, index + from.length);
+        const index = node.text.indexOf(from);
+        if (index !== -1) {
+          Transforms.select(this.editor, Editor.range(this.editor, { anchor: { path, offset: index }, focus: { path, offset: index + from.length } }));
+          this.editor.addMark("suggested", true);
+          this.editor.addMark("suggestion", to);
+          return; // TORIAEZU: １箇所だけ
         }
       }
     }
@@ -161,8 +158,11 @@ export class DraftAccessor {
       at: [],
       match: n => Text.isText(n) && 'suggested' in n,
     })) {
-      const { suggestion } = node;
-      Transforms.setNodes(this.editor, { text: suggestion }, { at: path });
+      Transforms.select(this.editor, Editor.range(this.editor, path));
+      Transforms.insertText(this.editor, node.suggestion);
+      Transforms.select(this.editor, Editor.range(this.editor, path));
+      this.editor.removeMark("suggested");
+      this.editor.removeMark("suggestion");
     }
   }
 }

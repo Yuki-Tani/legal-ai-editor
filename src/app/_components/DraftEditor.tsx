@@ -7,6 +7,7 @@ import { DraftElement, DraftText } from "../_types/Draft"
 import styles from "./DraftEditor.module.css"
 import { useDraftContext } from "./DraftContext"
 import { DraftEditorFocusedRangePopup } from "./DraftEditorPopup";
+import { draftSample1 } from "./DraftSample"
 
 type DraftEditorProps = {
   renderExtensions?: (props: DraftEditorExtensionProps) => JSX.Element
@@ -40,6 +41,11 @@ export default function DraftEditor({renderExtensions, style}: DraftEditorProps)
           if (event.ctrlKey && event.key === "d") {
             event.preventDefault();
             console.log(draft);
+          }
+          // Ctrl + 1 : サンプルドラフトを挿入
+          if (event.ctrlKey && event.key === "1") {
+            event.preventDefault();
+            draftAccessor.replaceDraft(draftSample1);
           }
         }}
         style={style}
@@ -116,8 +122,15 @@ function renderLeaf(props: RenderLeafProps): JSX.Element {
   }
 
   return (
-    <span {...attributes} className={className}>
-      {children}
-    </span>
+    <>
+      <span {...attributes} className={className}>
+        {children}
+      </span>
+      { "suggestion" in leaf &&
+        <span className={styles.suggestion}>
+          {leaf.suggestion}
+        </span>
+      }
+    </>
   );
 }

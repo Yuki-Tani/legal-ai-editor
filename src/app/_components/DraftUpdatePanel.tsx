@@ -43,11 +43,12 @@ export default function DraftUpdatePanel({discussionId}: {discussionId: string})
 
   const pickAgent = useCallback(async (discussion: Discussion) => {
     // Agent の選択
+    console.log(discussion);
     if (discussion.comments.at(-1)?.agent.id === ManagerAgent.id && discussion.comments.at(-1)?.type === "agree") {
-      return { agent: ManagerAgent, type: "agree"};
+      return { agent: ManagerAgent, expectedCommentType: "agree"};
     }
     if (discussion.comments.at(-1)?.agent.id === DraftUpdater.id) {
-      return { agent: ManagerAgent, type: "agree"};
+      return { agent: ManagerAgent, expectedCommentType: "discuss"};
     }
     if (discussion.comments.at(-1)?.agent.id !== ManagerAgent.id && discussion.comments.at(-2)?.agent.id !== ManagerAgent.id) {
       return { agent: DraftUpdater, type: "suggest"};
@@ -63,9 +64,11 @@ export default function DraftUpdatePanel({discussionId}: {discussionId: string})
 
   const invokeAgent = useCallback(async (discussion: Discussion, request: CommentRequest) => {
     // Agent の発話
-    if (request.agent.id === ManagerAgent.id && request.type === "agree") {
+    console.log(request);
+    if (request.agent.id === ManagerAgent.id && request.type === "agree" && !discussion.comments.find(c => c.id === "update-draft")) {
+      console.log("apply suggestion...");
       draftAccessor.applySuggestion();
-      return { id: request.id, agent: ManagerAgent, type: "agree" as CommentType, message: "ドラフトを更新しました。" };
+      return { id: "update-draft", agent: ManagerAgent, type: "agree" as CommentType, message: "ドラフトを更新しました。" };
     }
     if (request.agent.id === ManagerAgent.id) { return undefined; }
     if (request.agent.id === DraftUpdater.id) {
@@ -79,7 +82,7 @@ export default function DraftUpdatePanel({discussionId}: {discussionId: string})
 
   const [discussion, setDiscussion] = useDiscussion(initialDiscussion.current, pickAgent, invokeAgent);
 
-  if (!discussion.isCompleted && discussion.comments.at(-1)?.agent.id === ManagerAgent.id && discussion.comments.at(-1)?.type === "agree") {
+  if (!discussion.isCompleted && discussion.comments.find(c => c.id === "update-draft")) {
     setDiscussion({
       ...discussion,
       isCompleted: true,
