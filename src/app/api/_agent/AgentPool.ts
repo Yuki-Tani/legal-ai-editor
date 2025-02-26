@@ -55,16 +55,25 @@ export async function AgentAction(discussion: Discussion): Promise<Comment[]> {
     }
     case "public-comment": {
       resultState = await PublicCommentAIAction(discussion);
+      console.log("public-comment");
       if (resultState.type === "multipleComments") {
         // 複数のコメントについてそれぞれのコメントについて返答を行う
-        const comments = resultState.answers || [];
-        return comments.map((c) => ({
-          id: commentRequest.id,
-          agent: commentRequest.agent,
-          type: commentRequest.type ?? "discuss",
-          message: c.content ?? "(no answer)",
-          draft: undefined,
-        }));
+        const comments: Comment[] = [];
+        console.log("resultState: multipleComments");
+        console.log(resultState);
+        const answers = resultState.answers ?? [];
+        answers.forEach((answer, index) => {
+          const author = answer.author ? answer.author + ": " : "";
+          const ansContent = answer.content ?? "(no answer)";
+          comments.push({
+            id: commentRequest.id + "-" + index,
+            agent: commentRequest.agent,
+            type: commentRequest.type ?? "discuss",
+            message: author + ansContent,
+            draft: undefined,
+          });
+        });
+        return comments;
       }
       break;
     }

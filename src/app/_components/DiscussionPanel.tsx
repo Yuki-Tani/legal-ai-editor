@@ -1,5 +1,4 @@
-
-'use client'
+"use client";
 
 import { Agent, getAgentIconType, ManagerAgent } from "@/types/Agent";
 import AgentMessage from "./AgentMessage";
@@ -10,12 +9,17 @@ import TextArea from "./TextArea";
 import Button from "./Button";
 import panelStyles from "./Panel.module.css";
 
+export type AgentInvokeResult =
+  | { comments?: Comment[]; discussionPatch?: Partial<Discussion> }
+  | string
+  | undefined;
+
 export default function DiscussionPanel({
   discussion,
   setDiscussion,
-} : {
-  discussion: Discussion,
-  setDiscussion: (discussion: Discussion) => void,
+}: {
+  discussion: Discussion;
+  setDiscussion: (discussion: Discussion) => void;
 }) {
   const [userInput, setUserInput] = useState("");
   const [isAnswerPending, startAnswerTransition] = useTransition();
@@ -25,12 +29,15 @@ export default function DiscussionPanel({
     startAnswerTransition(async () => {
       setDiscussion({
         ...discussion,
-        comments: [...discussion.comments, {
-          id: `manager-${discussion.comments.length}`,
-          agent: ManagerAgent,
-          type: "discuss",
-          message: userInput,
-        }],
+        comments: [
+          ...discussion.comments,
+          {
+            id: `manager-${discussion.comments.length}`,
+            agent: ManagerAgent,
+            type: "discuss",
+            message: userInput,
+          },
+        ],
         commentRequest: null,
       });
       setUserInput("");
@@ -42,12 +49,15 @@ export default function DiscussionPanel({
     startAnswerTransition(async () => {
       setDiscussion({
         ...discussion,
-        comments: [...discussion.comments, {
-          id: `manager-${discussion.comments.length}`,
-          agent: ManagerAgent,
-          type: "agree",
-          message: `${comment.agent.name} の提案にしたがって、ドラフトを更新します。`,
-        }],
+        comments: [
+          ...discussion.comments,
+          {
+            id: `manager-${discussion.comments.length}`,
+            agent: ManagerAgent,
+            type: "agree",
+            message: `${comment.agent.name} の提案にしたがって、ドラフトを更新します。`,
+          },
+        ],
         commentRequest: null,
       });
     });
@@ -60,27 +70,30 @@ export default function DiscussionPanel({
       setIsOpen={(isOpen) => setDiscussion({ ...discussion, isActive: isOpen })}
       isComplete={discussion.isCompleted}
     >
-      { discussion.comments.map((comment) => (
+      {discussion.comments.map((comment) => (
         <div key={comment.id}>
           <hr />
           <AgentMessage
-            key={comment.id}
             agentIconType={getAgentIconType(comment.agent.id)}
             agentName={comment.agent.name}
           >
             {comment.message}
           </AgentMessage>
-          { 
-            (comment.type === "suggest") &&
+          {comment.type === "suggest" && (
             <div className={panelStyles.buttons}>
-              <Button onClick={() => handleApply(comment)} isLoading={isAnswerPending} disabled={discussion.commentRequest?.agent.id !== "manager"}>
+              <Button
+                onClick={() => handleApply(comment)}
+                isLoading={isAnswerPending}
+                disabled={discussion.commentRequest?.agent.id !== "manager"}
+              >
                 この変更を適用する
               </Button>
             </div>
-          }
+          )}
         </div>
       ))}
-      { (discussion.commentRequest && discussion.commentRequest.agent.id !== "manager") &&
+
+      {discussion.commentRequest && discussion.commentRequest.agent.id !== "manager" && (
         <div>
           <hr />
           <AgentMessage
@@ -90,8 +103,9 @@ export default function DiscussionPanel({
             思考中...
           </AgentMessage>
         </div>
-      }
-      { discussion.commentRequest && discussion.commentRequest.agent.id === "manager" &&
+      )}
+
+      {discussion.commentRequest && discussion.commentRequest.agent.id === "manager" && (
         <div>
           <hr />
           <TextArea value={userInput} onChange={setUserInput} />
@@ -101,33 +115,35 @@ export default function DiscussionPanel({
             </Button>
           </div>
         </div>
-      }
+      )}
     </Panel>
-  )
+  );
 }
 
 export function useDiscussion(
   initialDiscussion: Discussion,
-  pickAgent: (discussion: Discussion, lastComment?: Comment) => Promise<{ agent: Agent, expectedCommentType?: CommentType } | undefined>,
-  invokeAgent: (discussion: Discussion, request: CommentRequest) => Promise<Comment | string | undefined>,
-) : [Discussion, /*setDiscussion*/(discussion: Discussion) => void, /*isPickAgentPending*/boolean, /*isInvokeAgentPending*/boolean]
-{
+  pickAgent: (
+    discussion: Discussion,
+    lastComment?: Comment
+  ) => Promise<{ agent: Agent; expectedCommentType?: CommentType } | undefined>,
+  invokeAgent: (discussion: Discussion, request: CommentRequest) => Promise<AgentInvokeResult>
+): [Discussion, (d: Discussion) => void, boolean, boolean] {
   const [discussion, setDiscussion] = useState<Discussion>(initialDiscussion);
   const [isPickAgentPending, startPickAgentTransition] = useTransition();
   const [isInvokeAgentPending, startInvokeAgentTransition] = useTransition();
 
   useEffect(() => {
-    if (!discussion.isActive || discussion.isCompleted) { return; }
+    if (!discussion.isActive || discussion.isCompleted) {
+      return;
+    }
 
-    if (!discussion.commentRequest)
-    {
+    if (!discussion.commentRequest) {
       startPickAgentTransition(async () => {
         const next = await pickAgent(
           discussion,
           discussion.comments[discussion.comments.length - 1]
         );
-        if (next)
-        {
+        if (next) {
           setDiscussion({
             ...discussion,
             commentRequest: {
@@ -139,27 +155,43 @@ export function useDiscussion(
         }
       });
     }
+
     if (discussion.commentRequest) {
       const request = discussion.commentRequest;
       startInvokeAgentTransition(async () => {
-        const comment = await invokeAgent(discussion, request);
-        if (comment && discussion.commentRequest?.id === request.id)
-        {
-          if (typeof comment === "string") {
+        const agentResult = await invokeAgent(discussion, request);
+        if (agentResult && discussion.commentRequest?.id === request.id) {
+          if (typeof agentResult === "string") {
             setDiscussion({
               ...discussion,
-              comments: [...discussion.comments, {
-                id: request.id,
-                agent: request.agent,
-                type: request.type ?? "discuss",
-                message: comment,
-              }],
+              comments: [
+                ...discussion.comments,
+                {
+                  id: request.id,
+                  agent: request.agent,
+                  type: request.type ?? "discuss",
+                  message: agentResult,
+                },
+              ],
               commentRequest: null,
             });
-          } else {
+          }
+          else if ("comments" in agentResult || "discussionPatch" in agentResult) {
             setDiscussion({
               ...discussion,
-              comments: [...discussion.comments, comment],
+              comments: [
+                ...discussion.comments,
+                ...(agentResult.comments ?? []),
+              ],
+              ...(agentResult.discussionPatch ?? {}),
+              commentRequest: null,
+            });
+          }
+          else {
+            const comments = agentResult as Comment[];
+            setDiscussion({
+              ...discussion,
+              comments: [...discussion.comments, ...comments],
               commentRequest: null,
             });
           }
@@ -168,5 +200,5 @@ export function useDiscussion(
     }
   }, [discussion, pickAgent, invokeAgent]);
 
-  return [discussion, setDiscussion, isPickAgentPending, isInvokeAgentPending] as const;
+  return [discussion, setDiscussion, isPickAgentPending, isInvokeAgentPending];
 }
