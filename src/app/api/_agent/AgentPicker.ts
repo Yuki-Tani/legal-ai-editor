@@ -89,6 +89,11 @@ export type NextCommentorPickerResponse = {
 }
 
 export async function NextCommentorPickerAction(request: NextCommentorPickerRequest): Promise<NextCommentorPickerResponse> {
+  // すでに discussion に登場している agent を除外する
+  const usedAgentIds = new Set(request.discussion.comments.map(c => c.agent.id));
+  const candidatePool = (request.candidate ?? AgentPool).filter(
+    (agent) => !usedAgentIds.has(agent.id)
+  )
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -96,7 +101,7 @@ export async function NextCommentorPickerAction(request: NextCommentorPickerRequ
 # 現在のディスカッション
 ${JSON.stringify(request.discussion) /*FUTURE: 不要な draft を取り除く*/}
 # Agent Pool
-${request.candidate ? JSON.stringify(request.candidate) : JSON.stringify(AgentPool)}
+${JSON.stringify(candidatePool)}
 # 命令
 ある文書について、ディスカッションが行われている。
 次に発話するべきエージェントを "Agent Pool" から選択してください。
@@ -120,8 +125,15 @@ ${request.candidate ? JSON.stringify(request.candidate) : JSON.stringify(AgentPo
       return { agent: { id: "manager", name: "(error)", description: "エラーが発生しました" }, expectedCommentType: "discuss" };
     }
 
+    const pickedAgentId = completion.choices[0].message.parsed?.agentId;
+    const pickedAgent = candidatePool.find((agent) => agent.id === pickedAgentId) ?? {
+      id: "manager",
+      name: "(error)",
+      description: "エージェントが見つかりません",
+    };
+
     return {
-      agent: AgentPool.find(agent => agent.id === completion.choices[0].message.parsed?.agentId) ?? { id: "manager", name: "(error)", description: "エージェントが見つかりません" },
+      agent: pickedAgent,
       expectedCommentType: completion.choices[0].message.parsed?.expectedCommentType ?? "discuss",
     }
 

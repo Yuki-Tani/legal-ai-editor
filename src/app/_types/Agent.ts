@@ -47,9 +47,9 @@ export const AgentPool: Agent[] = [
   },
   {
     id: "web-research",
-    name: "Web 検索 AI",
+    name: "Webリサーチ AI",
     description:
-      "Web 検索を行うことができるエージェントです。最新のニュースなどを検索できる強みがあります。",
+      "法律や法律以外のトピックについてWeb検索を行って専門知識を取得できるエージェントです。最新の情報を検索できる強みがあります。",
   },
   {
     id: "public-comment",

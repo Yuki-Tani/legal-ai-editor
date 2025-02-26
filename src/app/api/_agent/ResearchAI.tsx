@@ -34,7 +34,7 @@ async function callFlaskGeminiSearch(text: string): Promise<string> {
       throw new Error(data.error || "Flask API エラー");
     }
 
-    return data.context;
+    return data.result;
   } catch (error) {
     console.error("Flask API 呼び出しエラー:", error);
     return "";
