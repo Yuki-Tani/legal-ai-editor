@@ -90,9 +90,10 @@ export type NextCommentorPickerResponse = {
 
 export async function NextCommentorPickerAction(request: NextCommentorPickerRequest): Promise<NextCommentorPickerResponse> {
   // すでに discussion に登場している agent を除外する
+  // candidatePoolには必ずBaseAIが含まれるようにする
   const usedAgentIds = new Set(request.discussion.comments.map(c => c.agent.id));
   const candidatePool = (request.candidate ?? AgentPool).filter(
-    (agent) => !usedAgentIds.has(agent.id)
+    (agent) => !usedAgentIds.has(agent.id) || agent.id === "basic"
   )
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     {
