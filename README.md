@@ -2,6 +2,17 @@
 
 The legal document creation tool with the support of multiple AI assistants. This project is for ["Hourei & Degital Hackathon 2025"](https://www.digital.go.jp/news/0ac7897f-acd6-47c6-a579-48339d4805e0) event.
 
+For details of the project and product, please refer [the pdf document (in Japanese)](./docs/08_パンダ_法律文書AIエディター.pdf).
+
+This project has been awarded the "法制事務効率化賞"🎉 Thanks!  
+<img src="./docs/法制事務効率化賞.png" alt="award" width="300"/>
+
+![screen](./docs/screen-sample.png)
+
+Examples of AI assistants.  
+<img src="./docs/ai-sample-1.png" alt="ai" width="400"/>
+<img src="./docs/ai-sample-2.png" alt="ai" width="400"/>
+
 ## Getting Started
 
 1. Ensure / install required tools for this project.
